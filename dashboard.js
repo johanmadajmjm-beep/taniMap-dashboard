@@ -19,8 +19,8 @@ let state = {
   maps: { overview: null, peta: null },
   currentPage: 'overview',
   pagination: { petani:1, kunjungan:1, produksi:1, tanaman:1 },
-  filtered: { petani:[], kunjungan:[], produksi:[], tanaman:[] },
-  colFilters: { petani:{}, kunjungan:{}, produksi:{}, tanaman:{} },
+  filtered: { petani:[], kunjungan:[], produksi:[], tanaman:[], hama:[] },
+  colFilters: { petani:{}, kunjungan:{}, produksi:{}, tanaman:{}, hama:{} },
 };
 const PER_PAGE = 25;
 
@@ -65,6 +65,44 @@ function showApp() {
   const av = document.getElementById('sidebarAvatar');
   if (pic) av.innerHTML = `<img src="${pic}">`;
   else av.textContent = name[0].toUpperCase();
+  // Simpan user info ke sessionStorage agar tidak hilang saat navigate
+  sessionStorage.setItem('tm_user', JSON.stringify(state.user));
+}
+
+// Cek session saat halaman dimuat
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('tm_user');
+  if (saved) {
+    try {
+      state.user = JSON.parse(saved);
+      // Token sudah expire setelah 1 jam — minta token baru silent
+      silentLogin();
+    } catch(e) { sessionStorage.removeItem('tm_user'); }
+  }
+});
+
+function silentLogin() {
+  // Minta token baru tanpa popup jika user sudah pernah login
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CONFIG.CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.readonly email profile',
+      prompt: '', // silent — tidak tampilkan popup jika sudah pernah login
+      callback: async (resp) => {
+        if (resp.error || !resp.access_token) {
+          // Silent login gagal, tampilkan login page
+          sessionStorage.removeItem('tm_user');
+          return;
+        }
+        state.token = resp.access_token;
+        showApp();
+        await refreshData();
+      }
+    });
+    client.requestAccessToken({ prompt: '' });
+  } catch(e) {
+    sessionStorage.removeItem('tm_user');
+  }
 }
 
 // ============================================================
@@ -80,12 +118,13 @@ async function refreshData() {
     if (json.status !== 'ok') throw new Error(json.message || 'Gagal memuat data');
     state.data = json.data;
     // Reset filters
-    state.colFilters = { petani:{}, kunjungan:{}, produksi:{}, tanaman:{} };
+    state.colFilters = { petani:{}, kunjungan:{}, produksi:{}, tanaman:{}, hama:{} };
     state.filtered = {
       petani:    [...state.data.petani],
       kunjungan: [...state.data.kunjungan],
       produksi:  [...state.data.produksi],
       tanaman:   [...state.data.tanaman],
+      hama:      [...(state.data.hama||[])],
     };
     showLoading('Memuat foto dari Google Drive...');
     await loadDriveFiles();
@@ -121,6 +160,7 @@ function renderAll() {
   renderTable('kunjungan');
   renderTable('produksi');
   renderTable('tanaman');
+  renderTable('hama');
   renderGaleri();
   populatePetaFilters();
   updateCounts();
@@ -139,7 +179,7 @@ function renderStats() {
 }
 
 function updateCounts() {
-  const types = ['petani','kunjungan','produksi','tanaman'];
+  const types = ['petani','kunjungan','produksi','tanaman','hama'];
   types.forEach(t => {
     const el = document.getElementById(t + 'Count');
     if (el) el.textContent = `${state.filtered[t].length} data`;
@@ -189,6 +229,14 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
   if (!ctx) return;
   if (state.charts[id]) state.charts[id].destroy();
   const colors = Array.isArray(color) ? color : Array(data.length).fill(color);
+
+  const xTickCb = (isCurrency && !horizontal)
+    ? function(v) { return 'Rp'+(v/1e6).toFixed(0)+'jt'; }
+    : undefined;
+  const yTickCb = (isCurrency && horizontal)
+    ? function(v) { return 'Rp'+(v/1e6).toFixed(0)+'jt'; }
+    : undefined;
+
   state.charts[id] = new Chart(ctx, {
     type,
     data: {
@@ -196,32 +244,39 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
       datasets: [{
         data,
         backgroundColor: type==='doughnut' ? colors : (Array.isArray(color)?colors:color),
-        borderColor: type==='bar' ? (Array.isArray(color)?colors:color) : 'transparent',
+        borderColor: type==='bar' ? 'transparent' : 'transparent',
         borderRadius: type==='bar' ? 5 : 0,
-        borderWidth: type==='bar' ? 1 : 0,
+        borderWidth: 0,
       }]
     },
     options: {
       indexAxis: horizontal ? 'y' : 'x',
-      responsive: true, maintainAspectRatio: true,
+      responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: {
-          position: type==='doughnut' ? 'right' : 'none',
+          display: type==='doughnut',
+          position: 'right',
           labels: { font:{size:10,family:'Plus Jakarta Sans'}, boxWidth:10, padding:8 }
         },
         tooltip: {
           callbacks: {
-            label: ctx => isCurrency
-              ? ' Rp ' + Number(ctx.raw).toLocaleString('id-ID')
-              : ' ' + ctx.raw
+            label: function(ctx) {
+              if (isCurrency) return ' Rp ' + Number(ctx.raw).toLocaleString('id-ID');
+              return ' ' + ctx.raw;
+            }
           }
         }
       },
       scales: type==='bar' ? {
-        x: { grid:{display:horizontal}, ticks:{font:{size:10},
-          callback: isCurrency && !horizontal ? v=>'Rp'+(v/1e6).toFixed(0)+'jt' : undefined }},
-        y: { grid:{display:!horizontal,color:'#f1f5f9'}, ticks:{font:{size:10},
-          callback: isCurrency && horizontal ? v=>'Rp'+(v/1e6).toFixed(0)+'jt' : undefined }}
+        x: {
+          grid: { display: horizontal },
+          ticks: { font:{size:10}, maxRotation:35, callback: xTickCb }
+        },
+        y: {
+          grid: { display: !horizontal, color:'#f1f5f9' },
+          ticks: { font:{size:10}, callback: yTickCb }
+        }
       } : {}
     }
   });
@@ -274,12 +329,19 @@ function addMarkersToMap(map, petaniList) {
 }
 
 function renderOverviewMap() {
-  if (!state.maps.overview) state.maps.overview = initMap('dashMap');
+  if (!state.maps.overview) {
+    state.maps.overview = initMap('dashMap');
+  }
   const map = state.maps.overview;
   const withGPS = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   document.getElementById('mapCount').textContent = `${withGPS.length} titik GPS dari ${state.data.petani.length} petani`;
+  // Reset ke view Indonesia dulu
+  map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
   const bounds = addMarkersToMap(map, withGPS);
-  if (bounds.length) map.fitBounds(bounds,{padding:[30,30],maxZoom:12});
+  // Zoom ke titik petani hanya jika ada data
+  if (bounds.length) {
+    setTimeout(() => map.fitBounds(bounds, {padding:[40,40], maxZoom:12}), 300);
+  }
 }
 
 function renderPetaPage() {
@@ -353,13 +415,13 @@ function renderTable(type) {
         <td>${commodityBadge(row['Komoditas'])}</td>
         <td>${row['Total Lahan (Ha)']||'-'}</td>
         <td style="font-size:12px">${row['HP']||'-'}</td>
-        <td style="font-size:11px;color:var(--s5)">${row['Tgl Input']||'-'}</td>
+        <td style="font-size:11px;color:var(--s5)">${fmtDate(row['Tgl Input'])}</td>
       </tr>`;
       case 'kunjungan': return `<tr>
         <td style="color:var(--s5);font-size:11px">${no}</td>
         <td><strong>${row['Nama Petani']||'-'}</strong></td>
         <td>${row['Desa']||'-'}</td>
-        <td style="font-size:12px">${row['Tanggal']||'-'}</td>
+        <td style="font-size:12px">${fmtDate(row['Tanggal'])}</td>
         <td>${row['Petugas']||'-'}</td>
         <td>${kondisiBadge(row['Kondisi'])}</td>
         <td style="font-size:12px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${row['Masalah']||'-'}</td>
@@ -387,6 +449,18 @@ function renderTable(type) {
         <td>${row['Umur (Bln)']||'-'}</td>
         <td>${statusBadge(row['Status'])}</td>
         <td style="font-size:12px">${row['Perkiraan Panen']||'-'}</td>
+      </tr>`;
+      case 'hama': return `<tr>
+        <td style="color:var(--s5);font-size:11px">${no}</td>
+        <td><strong>${row['Nama Petani']||'-'}</strong></td>
+        <td>${row['Desa']||'-'}</td>
+        <td style="font-size:12px">${fmtDate(row['Tgl Kunjungan'])}</td>
+        <td style="font-size:12px">${row['Petugas']||'-'}</td>
+        <td>${row['Nama Tanaman']||'-'}</td>
+        <td><strong>${row['Nama Hama/Penyakit']||'-'}</strong></td>
+        <td>${hamaTingkatBadge(row['Tingkat Serangan'])}</td>
+        <td>${hamaStatusBadge(row['Status'])}</td>
+        <td style="font-size:12px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${row['Solusi/Penanganan']||'-'}</td>
       </tr>`;
       default: return '';
     }
@@ -446,7 +520,8 @@ function renderGaleri() {
                  f.name.startsWith('lahan')?'Lahan':
                  f.name.startsWith('tanaman')?'Tanaman':'Foto';
     const badgeClass = type==='Petani'?'badge-green':type==='Lahan'?'badge-blue':'badge-purple';
-    const displayName = f.name.replace(/^(petani|lahan|tanaman)_/,'').replace('.jpg','').replace(/_/g,' ');
+    const rawName = f.name.replace(/\.jpg$/i,'').replace(/\.jpeg$/i,'').replace(/\.png$/i,'');
+    const displayName = rawName.replace(/^(petani|lahan|tanaman)_/i,'').replace(/_/g,' ');
     return `<div class="gallery-item" onclick="openLightbox('${f.id}','${displayName}','${type}')">
       <img src="${thumb}" alt="${displayName}" loading="lazy"
         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 100%22%3E%3Crect fill=%22%23f1f5f9%22 width=%22120%22 height=%22100%22/%3E%3Ctext x=%2260%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2228%22%3E📷%3C/text%3E%3C/svg%3E'" />
@@ -474,7 +549,7 @@ function closeLightbox() {
 const PAGE_TITLES = {
   overview:'Overview',peta:'Peta Sebaran',petani:'Data Petani',
   kunjungan:'Kunjungan Lapangan',produksi:'Data Produksi',
-  tanaman:'Data Tanaman',galeri:'Galeri Foto',
+  tanaman:'Data Tanaman',hama:'Hama & Penyakit',galeri:'Galeri Foto',
 };
 
 function showPage(id) {
@@ -486,6 +561,22 @@ function showPage(id) {
   state.currentPage = id;
   if (id==='peta'&&state.maps.peta) { setTimeout(()=>state.maps.peta.invalidateSize(),100); renderPetaPage(); }
   if (id==='overview'&&state.maps.overview) setTimeout(()=>state.maps.overview.invalidateSize(),100);
+}
+
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function fmtDate(val) {
+  if (!val) return '-';
+  const s = String(val);
+  // ISO format: 2024-03-09T16:00:00.000Z
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (!isNaN(d)) return d.toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  // Already formatted or plain date
+  return s.split('T')[0] || s;
 }
 
 // ============================================================
@@ -502,6 +593,15 @@ function kondisiBadge(k) {
 }
 function statusBadge(s) {
   const m={'Baik':'badge-green','Perawatan':'badge-amber','Terserang Hama':'badge-red','Siap Panen':'badge-teal'};
+  return `<span class="badge ${m[s]||'badge-gray'}">${s||'-'}</span>`;
+}
+
+function hamaTingkatBadge(t) {
+  const m={'Ringan':'badge-green','Sedang':'badge-amber','Berat':'badge-red'};
+  return `<span class="badge ${m[t]||'badge-gray'}">${t||'-'}</span>`;
+}
+function hamaStatusBadge(s) {
+  const m={'Dalam Pemantauan':'badge-amber','Ditangani':'badge-blue','Selesai':'badge-green'};
   return `<span class="badge ${m[s]||'badge-gray'}">${s||'-'}</span>`;
 }
 
