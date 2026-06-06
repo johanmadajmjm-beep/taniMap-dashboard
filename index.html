@@ -5,63 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TaniMap Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{
-  --g1:#052e16;--g2:#065f46;--g3:#059669;--g4:#34d399;--g5:#d1fae5;
-  --s1:#0f172a;--s2:#1e293b;--s3:#334155;--s4:#64748b;--s5:#94a3b8;
-  --bg:#f1f5f9;--card:#ffffff;--border:#e2e8f0;
+  --g1:#022c22;--g2:#064e3b;--g3:#059669;--g4:#34d399;--g5:#d1fae5;
+  --s1:#060d1f;--s2:#0f1f3d;--s3:#1e3a5f;--s4:#64748b;--s5:#94a3b8;
+  --bg:#f0f4f8;--card:#ffffff;--border:#e2e8f0;
   --blue:#2563eb;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--teal:#0891b2;
-  --font-head:'Fraunces',serif;--font-body:'Plus Jakarta Sans',sans-serif;
-  --r:14px;--shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
-  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --font-head:'Manrope',sans-serif;
+  --font-body:'Plus Jakarta Sans',sans-serif;
+  --r:16px;--r-sm:10px;
+  --shadow:0 2px 8px rgba(6,13,31,.06),0 8px 24px rgba(6,13,31,.08);
+  --shadow-lg:0 16px 48px rgba(6,13,31,.14);
+  --glass:rgba(255,255,255,.7);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-height:100vh;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-height:100vh;
+  background-image:radial-gradient(ellipse at 10% 0%,rgba(5,150,105,.06) 0%,transparent 50%),
+  radial-gradient(ellipse at 90% 100%,rgba(37,99,235,.05) 0%,transparent 50%);}
 
 /* SIDEBAR */
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--s1);display:flex;flex-direction:column;z-index:100;}
-.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
-.sidebar-logo-text{font-family:var(--font-head);font-size:24px;font-weight:700;color:white;letter-spacing:-.5px;line-height:1;}
-.sidebar-logo-text span{color:var(--g4);}
-.sidebar-logo small{display:block;font-size:10px;font-weight:500;color:var(--s5);font-family:var(--font-body);letter-spacing:.05em;text-transform:uppercase;margin-top:4px;}
-.nav-items{flex:1;padding:10px 0;overflow-y:auto;}
-.nav-item{display:flex;align-items:center;gap:11px;padding:10px 16px;margin:1px 8px;border-radius:10px;cursor:pointer;color:var(--s5);font-size:13px;font-weight:500;transition:all .15s;border:none;background:none;width:calc(100% - 16px);text-align:left;font-family:var(--font-body);}
-.nav-item:hover{background:rgba(255,255,255,.07);color:white;}
-.nav-item.active{background:var(--g2);color:white;}
-.nav-item i{width:15px;text-align:center;font-size:13px;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;
+  background:linear-gradient(180deg,#060d1f 0%,#0a1628 60%,#06180f 100%);
+  display:flex;flex-direction:column;z-index:100;
+  border-right:1px solid rgba(52,211,153,.1);}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.06);}
+.sidebar-logo-text{font-family:var(--font-head);font-size:22px;font-weight:800;
+  color:white;letter-spacing:-1px;line-height:1;}
+.sidebar-logo-text span{background:linear-gradient(135deg,#34d399,#059669);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sidebar-logo small{display:block;font-size:10px;font-weight:600;color:rgba(255,255,255,.3);
+  font-family:var(--font-body);letter-spacing:.1em;text-transform:uppercase;margin-top:5px;}
+.nav-items{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 10px;
+  border-radius:12px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;
+  font-weight:500;transition:all .2s;border:none;background:none;
+  width:calc(100% - 20px);text-align:left;font-family:var(--font-body);}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);}
+.nav-item.active{background:linear-gradient(135deg,rgba(5,150,105,.3),rgba(5,150,105,.15));
+  color:var(--g4);border:1px solid rgba(52,211,153,.2);}
+.nav-item i{width:16px;text-align:center;font-size:13px;}
 
 /* MAIN */
-.main{margin-left:232px;min-height:100vh;}
-.topbar{position:sticky;top:0;z-index:50;background:rgba(241,245,249,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
-.topbar-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--s1);}
+.main{margin-left:240px;min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:50;
+  background:rgba(240,244,248,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.6);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 1px 0 rgba(6,13,31,.05);}
+.topbar-title{font-family:var(--font-head);font-size:20px;font-weight:800;
+  color:var(--s1);letter-spacing:-.3px;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-.refresh-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:var(--g2);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .2s;}
-.refresh-btn:hover{background:var(--g3);}
+.refresh-btn{display:flex;align-items:center;gap:6px;padding:8px 18px;
+  border-radius:10px;background:linear-gradient(135deg,var(--g2),var(--g3));
+  color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);transition:all .2s;
+  box-shadow:0 4px 12px rgba(5,150,105,.3);}
+.refresh-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(5,150,105,.4);}
 .refresh-btn.loading i{animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .last-update{font-size:11px;color:var(--s5);}
-.content{padding:22px 24px;}
+.content{padding:24px 28px;}
 
 /* PAGES */
 .page{display:none;}
 .page.active{display:block;}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--card);border-radius:var(--r);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;}
-.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent,var(--g3));}
-.stat-val{font-family:var(--font-head);font-size:36px;font-weight:700;color:var(--s1);line-height:1;}
-.stat-lbl{font-size:11px;color:var(--s4);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-.stat-icon{position:absolute;top:14px;right:16px;font-size:24px;opacity:.1;}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border-radius:var(--r);padding:20px 22px;
+  border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow);
+  position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent,var(--g3)),transparent);}
+.stat-card::after{content:'';position:absolute;top:-30px;right:-20px;width:80px;height:80px;
+  border-radius:50%;background:var(--accent,var(--g3));opacity:.06;}
+.stat-val{font-family:var(--font-head);font-size:30px;font-weight:800;
+  color:var(--s1);line-height:1;letter-spacing:-.5px;}
+.stat-lbl{font-size:10.5px;color:var(--s4);margin-top:6px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;}
+.stat-icon{position:absolute;bottom:12px;right:16px;font-size:28px;opacity:.07;}
 
 /* CHARTS */
 .chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;}
 .chart-grid-wide{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:20px;}
-.chart-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;}
-.chart-card h4{font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--s2);margin-bottom:4px;}
+.chart-card{background:var(--card);border-radius:var(--r);border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow);padding:20px;transition:box-shadow .2s;}.chart-card:hover{box-shadow:var(--shadow-lg);}
+.chart-card h4{font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--s1);margin-bottom:4px;letter-spacing:-.2px;}
 .chart-card .chart-sub{font-size:11px;color:var(--s5);margin-bottom:12px;}
 canvas{max-height:200px;}
 
@@ -72,15 +104,25 @@ canvas{max-height:200px;}
 #dashMap{height:380px;}
 
 /* CARD TABLE */
-.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.card-header h3{font-family:var(--font-head);font-size:15px;font-weight:700;}
+.card{background:var(--card);border-radius:var(--r);border:1px solid rgba(255,255,255,.8);
+  box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s;}
+.card:hover{box-shadow:var(--shadow-lg);}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(135deg,rgba(255,255,255,1),rgba(248,250,252,.8));}
+.card-header h3{font-family:var(--font-head);font-size:15px;font-weight:800;
+  letter-spacing:-.2px;color:var(--s1);}
 .card-body{padding:0;overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
-th{padding:9px 12px;text-align:left;background:var(--s1);color:rgba(255,255,255,.8);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;font-family:var(--font-body);}
-td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--s2);vertical-align:middle;}
+th{padding:10px 14px;text-align:left;
+  background:linear-gradient(135deg,#060d1f,#0f1f3d);
+  color:rgba(255,255,255,.75);font-weight:700;font-size:10px;
+  text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;
+  font-family:var(--font-body);}
+td{padding:12px 14px;border-bottom:1px solid rgba(226,232,240,.6);
+  color:var(--s2);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f8fafc;}
+tr:hover td{background:rgba(5,150,105,.04);}
 
 /* BADGE */
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
@@ -170,7 +212,7 @@ tr:hover td{background:#f8fafc;}
         <div class="stats-grid">
           <div class="stat-card" style="--accent:var(--g3)"><div class="stat-val" id="st-petani">—</div><div class="stat-lbl">Total Petani</div><i class="fas fa-users stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--blue)"><div class="stat-val" id="st-kunjungan">—</div><div class="stat-lbl">Total Kunjungan</div><i class="fas fa-clipboard stat-icon"></i></div>
-          <div class="stat-card" style="--accent:var(--amber)"><div class="stat-val" id="st-produksi">—</div><div class="stat-lbl">Total Produksi</div><i class="fas fa-box stat-icon"></i></div>
+          <div class="stat-card" style="--accent:var(--amber)"><div class="stat-val" id="st-produksi">—</div><div class="stat-lbl">Hasil Penjualan</div><i class="fas fa-box stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Total Tanaman</div><i class="fas fa-seedling stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--red)"><div class="stat-val" id="st-hama">—</div><div class="stat-lbl">Laporan Hama</div><i class="fas fa-bug stat-icon"></i></div>
         </div>
@@ -179,7 +221,7 @@ tr:hover td{background:#f8fafc;}
           <div class="chart-card"><h4>Status Tanaman</h4><p class="chart-sub">Kondisi tanaman terkini</p><canvas id="chartTanaman"></canvas></div>
 
         </div>
-        <div class="chart-grid-wide">
+        <div class="chart-grid-wide" style="grid-template-columns:1fr;">
           <div class="chart-card"><h4>Petani per Desa</h4><p class="chart-sub">Top 10 desa</p><canvas id="chartDesa" style="max-height:240px"></canvas></div>
           <div class="chart-card"><h4>Produksi per Komoditas</h4><p class="chart-sub">Akumulasi nilai (Rp)</p><canvas id="chartProduksi" style="max-height:240px"></canvas></div>
         </div>
@@ -196,7 +238,9 @@ tr:hover td{background:#f8fafc;}
               <select class="filter-select" id="petaFilterDesa" onchange="renderPetaPage(true)"><option value="">Semua Desa</option></select>
             </div>
           </div>
-          <div id="petaMap" style="height:620px"></div>
+          <div id="petaMap" style="height:520px"></div>
+          <!-- Info box bawah peta -->
+          <div id="petaInfoBox" style="padding:16px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:var(--bg)"></div>
         </div>
       </div>
 
