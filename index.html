@@ -115,11 +115,21 @@ canvas{display:block;width:100%!important;}
   background:linear-gradient(135deg,rgba(255,255,255,1),rgba(248,250,252,.8));}
 .card-header h3{font-family:var(--font-head);font-size:15px;font-weight:800;
   letter-spacing:-.2px;color:var(--s1);}
-.card-body{padding:0;overflow:auto;max-height:100%;}
+.card-body{padding:0;overflow-x:auto;}
 .card-body table thead th{position:sticky;top:0;z-index:10;}
 .card-body table tr.sticky-bottom td{position:sticky;bottom:0;
   background:var(--g5);font-weight:700;z-index:9;
   border-top:2px solid var(--g3);}
+
+/* Full-height card untuk halaman tanpa split */
+.full-page-card{display:flex;flex-direction:column;height:calc(100vh - 130px);}
+.full-page-card .card{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.full-page-card .card-header{flex-shrink:0;}
+.full-page-card .card-body{flex:1;overflow:auto;min-height:0;}
+.full-page-card .pagination{flex-shrink:0;}
+
+/* Split card body juga perlu overflow */
+.split-card .card-body{overflow:auto;}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th{padding:10px 14px;text-align:left;
   background:linear-gradient(135deg,#060d1f,#0f1f3d);
@@ -261,7 +271,7 @@ tr:hover td{background:rgba(5,150,105,.04);}
 
       <!-- PETANI -->
       <div class="page" id="page-petani">
-        <div class="card">
+        <div class="full-page-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-users" style="color:var(--g3);margin-right:6px"></i>Data Petani</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -277,12 +287,12 @@ tr:hover td{background:rgba(5,150,105,.04);}
             <tbody id="petaniTable"></tbody>
           </table></div>
           <div class="pagination" id="petaniPagination"></div>
-        </div>
+        </div></div>
       </div>
 
       <!-- KUNJUNGAN -->
       <div class="page" id="page-kunjungan">
-        <div class="card">
+        <div class="full-page-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-clipboard-list" style="color:var(--blue);margin-right:6px"></i>Data Kunjungan</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -298,7 +308,7 @@ tr:hover td{background:rgba(5,150,105,.04);}
             <tbody id="kunjunganTable"></tbody>
           </table></div>
           <div class="pagination" id="kunjunganPagination"></div>
-        </div>
+        </div></div>
       </div>
 
       <!-- PRODUKSI -->
