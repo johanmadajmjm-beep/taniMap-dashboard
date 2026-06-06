@@ -1,4 +1,61 @@
 // ============================================================
+//  AUTH — USERNAME & PASSWORD
+// ============================================================
+const CREDENTIALS = [
+  { username: 'admin',   password: 'tanimap2026' },
+  { username: 'johan',   password: 'admin123'    },
+];
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+
+  const valid = CREDENTIALS.some(c => c.username === user && c.password === pass);
+  if (valid) {
+    errEl.style.display = 'none';
+    sessionStorage.setItem('tm_auth', btoa(user + ':' + Date.now()));
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    refreshData();
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+function togglePass() {
+  const input = document.getElementById('loginPass');
+  const icon  = document.getElementById('passEyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+function checkSession() {
+  const auth = sessionStorage.getItem('tm_auth');
+  if (auth) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    return true;
+  }
+  return false;
+}
+
+function doLogout() {
+  sessionStorage.removeItem('tm_auth');
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// ============================================================
 //  CONFIG
 // ============================================================
 const CONFIG = {
@@ -787,9 +844,9 @@ window.addEventListener('resize', () => {
 });
 // Auto load data saat halaman dibuka
 document.addEventListener('DOMContentLoaded', () => {
-  refreshData();
+  checkSession();
 });
-// Fallback jika DOMContentLoaded sudah lewat
+// Fallback
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(refreshData, 100);
+  setTimeout(checkSession, 100);
 }
