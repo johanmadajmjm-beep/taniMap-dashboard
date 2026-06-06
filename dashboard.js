@@ -2,7 +2,7 @@
 //  AUTH — USERNAME & PASSWORD
 // ============================================================
 const CREDENTIALS = [
-  { username: 'admin',   password: 'tanimap2026' },
+  { username: 'Ayotani',   password: 'tanimap2026' },
   { username: 'johan',   password: 'admin123'    },
 ];
 
@@ -156,6 +156,7 @@ function renderAll() {
   renderTable('hama');
   renderSummaries();
   renderPetaInfoBox();
+  renderLaporan();
   renderGaleri();
   populatePetaFilters();
   updateCounts();
@@ -606,7 +607,7 @@ function closeLightbox() {
 const PAGE_TITLES = {
   overview:'Overview',peta:'Peta Sebaran',petani:'Data Petani',
   kunjungan:'Kunjungan Lapangan',produksi:'Data Produksi',
-  tanaman:'Data Tanaman',hama:'Hama & Penyakit',galeri:'Galeri Foto',
+  tanaman:'Data Tanaman',hama:'Hama & Penyakit',laporan:'Laporan',galeri:'Galeri Foto',
 };
 
 function showPage(id) {
@@ -818,6 +819,433 @@ function hamaTingkatBadge(t) {
 function hamaStatusBadge(s) {
   const m={'Dalam Pemantauan':'badge-amber','Ditangani':'badge-blue','Selesai':'badge-green'};
   return `<span class="badge ${m[s]||'badge-gray'}">${s||'-'}</span>`;
+}
+
+
+// ============================================================
+//  LAPORAN
+// ============================================================
+
+function renderLaporan() {
+  const d = state.data;
+  const now = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  const el = document.getElementById('lapTanggal');
+  if (el) el.textContent = 'Per ' + now;
+
+  // Kalkulasi dasar
+  const totalPetani    = d.petani.length;
+  const totalLahan     = d.petani.reduce((s,p)=>s+(parseFloat(p['Total Lahan (Ha)'])||0),0);
+  const totalKunjungan = d.kunjungan.length;
+  const totalPenjualan = d.produksi.reduce((s,p)=>s+(parseFloat(p['Total (Rp)'])||0),0);
+  const totalTanaman   = d.tanaman.length;
+  const totalHama      = (d.hama||[]).length;
+
+  // Komoditas terbanyak
+  const kommCount = {};
+  d.petani.forEach(p=>{const k=p['Komoditas']||'-';kommCount[k]=(kommCount[k]||0)+1;});
+  const topKomm = Object.entries(kommCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // Desa terbanyak
+  const desaCount = {};
+  d.petani.forEach(p=>{const ds=p['Desa']||'-';desaCount[ds]=(desaCount[ds]||0)+1;});
+  const topDesa = Object.entries(desaCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // Kondisi kunjungan
+  const kondisiCount = {};
+  d.kunjungan.forEach(k=>{const c=k['Kondisi']||'-';kondisiCount[c]=(kondisiCount[c]||0)+1;});
+
+  // Narasi
+  const narasi = document.getElementById('lapNarasi');
+  if (narasi) narasi.innerHTML = `
+    <p>Laporan ini merangkum seluruh data yang telah dikumpulkan oleh petugas lapangan melalui aplikasi TaniMap.
+    Per tanggal <strong>${now}</strong>, sistem mencatat <strong>${totalPetani} petani binaan</strong> yang tersebar di
+    <strong>${Object.keys(desaCount).length} desa</strong> dengan total lahan produktif seluas
+    <strong>${totalLahan.toFixed(2)} Ha</strong>.</p>
+    <br>
+    <p>Komoditas yang paling banyak dibudidayakan adalah <strong>${topKomm?topKomm[0]:'-'}
+    (${topKomm?topKomm[1]:0} petani)</strong>. Desa dengan jumlah petani terbanyak adalah
+    <strong>${topDesa?topDesa[0]:'-'} (${topDesa?topDesa[1]:0} petani)</strong>.
+    Total nilai produksi yang tercatat mencapai
+    <strong>Rp ${totalPenjualan.toLocaleString('id-ID')}</strong>.</p>
+    <br>
+    <p>Dari <strong>${totalKunjungan} kunjungan lapangan</strong> yang telah dilakukan,
+    kondisi tanaman yang ditemukan: <strong>${kondisiCount['Baik']||0} Baik</strong>,
+    <strong>${kondisiCount['Perlu Perhatian']||0} Perlu Perhatian</strong>, dan
+    <strong>${kondisiCount['Kritis']||0} Kritis</strong>.
+    ${totalHama > 0 ? `Terdapat <strong>${totalHama} laporan hama & penyakit</strong> yang perlu mendapat perhatian.` : 'Tidak ada laporan hama & penyakit yang signifikan.'}
+    </p>
+  `;
+
+  // Stat grid ringkasan
+  const statGrid = document.getElementById('lapStatGrid');
+  if (statGrid) {
+    const stats = [
+      {icon:'fas fa-users',color:'#059669',label:'Total Petani',val:totalPetani},
+      {icon:'fas fa-map',color:'#2563eb',label:'Total Lahan',val:totalLahan.toFixed(2)+' Ha'},
+      {icon:'fas fa-clipboard',color:'#7c3aed',label:'Total Kunjungan',val:totalKunjungan},
+      {icon:'fas fa-money-bill',color:'#d97706',label:'Total Penjualan',val:'Rp '+( totalPenjualan>=1e9?(totalPenjualan/1e9).toFixed(1)+'M':totalPenjualan>=1e6?(totalPenjualan/1e6).toFixed(1)+'jt':totalPenjualan.toLocaleString('id-ID'))},
+      {icon:'fas fa-seedling',color:'#0891b2',label:'Total Tanaman',val:totalTanaman},
+      {icon:'fas fa-bug',color:'#dc2626',label:'Laporan Hama',val:totalHama},
+      {icon:'fas fa-home',color:'#059669',label:'Jumlah Desa',val:Object.keys(desaCount).length},
+      {icon:'fas fa-leaf',color:'#7c3aed',label:'Jenis Komoditas',val:Object.keys(kommCount).length},
+    ];
+    statGrid.innerHTML = stats.map(s=>`
+      <div style="background:var(--bg);border-radius:10px;padding:14px;border:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${s.color}20;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="${s.icon}" style="color:${s.color};font-size:14px"></i>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--s5);font-weight:600;text-transform:uppercase;letter-spacing:.04em">${s.label}</div>
+          <div style="font-size:16px;font-weight:800;color:var(--s1);font-family:'Manrope',sans-serif">${s.val}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---- Tabel Desa ----
+  const lapDesaTable = document.getElementById('lapDesaTable');
+  if (lapDesaTable) {
+    const desaMap = {};
+    d.petani.forEach(p=>{
+      const ds = p['Desa']||'-';
+      if (!desaMap[ds]) desaMap[ds]={kec:p['Kecamatan']||'-',count:0,komm:{},lahan:0};
+      desaMap[ds].count++;
+      const k=p['Komoditas']||'-';
+      desaMap[ds].komm[k]=(desaMap[ds].komm[k]||0)+1;
+      desaMap[ds].lahan+=parseFloat(p['Total Lahan (Ha)'])||0;
+    });
+    const rows = Object.entries(desaMap).sort((a,b)=>b[1].count-a[1].count);
+    lapDesaTable.innerHTML = rows.map(([desa,d],i)=>{
+      const topK = Object.entries(d.komm).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+      return `<tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td><strong>${desa}</strong></td>
+        <td>${d.kec}</td>
+        <td style="text-align:center;font-weight:700">${d.count}</td>
+        <td>${commodityBadge(topK)}</td>
+        <td style="text-align:center">${d.lahan.toFixed(2)}</td>
+      </tr>`;
+    }).join('') + `<tr style="background:var(--g5);font-weight:700">
+      <td></td><td style="color:var(--g2)">TOTAL</td><td></td>
+      <td style="text-align:center;color:var(--g2)">${totalPetani}</td><td></td>
+      <td style="text-align:center;color:var(--g2)">${totalLahan.toFixed(2)}</td>
+    </tr>`;
+  }
+
+  // ---- Tabel Produksi ----
+  const lapProduksiTable = document.getElementById('lapProduksiTable');
+  if (lapProduksiTable) {
+    const pm = {};
+    d.produksi.forEach(p=>{
+      const k=p['Komoditas']||'-';
+      if(!pm[k]) pm[k]={petani:new Set(),luas:0,jumlah:0,satuan:'',total:0};
+      pm[k].petani.add(p['Nama Petani']||'');
+      pm[k].luas+=parseFloat(p['Luas (Ha)'])||0;
+      pm[k].jumlah+=parseFloat(p['Jumlah'])||0;
+      pm[k].satuan=p['Satuan']||'';
+      pm[k].total+=parseFloat(p['Total (Rp)'])||0;
+    });
+    const rows = Object.entries(pm).sort((a,b)=>b[1].total-a[1].total);
+    const grandTotal = rows.reduce((s,[,v])=>s+v.total,0);
+    lapProduksiTable.innerHTML = rows.map(([k,v],i)=>`
+      <tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td>${commodityBadge(k)}</td>
+        <td style="text-align:center;font-weight:700">${v.petani.size}</td>
+        <td style="text-align:center">${v.luas.toFixed(2)}</td>
+        <td style="text-align:center">${v.jumlah.toLocaleString('id-ID')} ${v.satuan}</td>
+        <td style="font-weight:700;color:var(--g2)">Rp ${v.total.toLocaleString('id-ID')}</td>
+        <td>Rp ${v.petani.size>0?(v.total/v.petani.size).toLocaleString('id-ID',{maximumFractionDigits:0}):0}</td>
+      </tr>
+    `).join('') + `<tr style="background:var(--g5);font-weight:700">
+      <td></td><td style="color:var(--g2)">TOTAL</td>
+      <td style="text-align:center;color:var(--g2)">${new Set(d.produksi.map(p=>p['Nama Petani'])).size}</td>
+      <td></td><td></td>
+      <td style="color:var(--g2)">Rp ${grandTotal.toLocaleString('id-ID')}</td><td></td>
+    </tr>`;
+  }
+
+  // ---- Tabel Kunjungan per Petugas ----
+  const lapKunjunganTable = document.getElementById('lapKunjunganTable');
+  if (lapKunjunganTable) {
+    const pm = {};
+    d.kunjungan.forEach(k=>{
+      const p=k['Petugas']||'-';
+      if(!pm[p]) pm[p]={count:0,baik:0,perlu:0,kritis:0};
+      pm[p].count++;
+      if(k['Kondisi']==='Baik') pm[p].baik++;
+      else if(k['Kondisi']==='Perlu Perhatian') pm[p].perlu++;
+      else if(k['Kondisi']==='Kritis') pm[p].kritis++;
+    });
+    const rows = Object.entries(pm).sort((a,b)=>b[1].count-a[1].count);
+    lapKunjunganTable.innerHTML = rows.map(([p,v],i)=>`
+      <tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td><strong>${p}</strong></td>
+        <td style="text-align:center;font-weight:700">${v.count}</td>
+        <td style="text-align:center"><span class="badge badge-green">${v.baik}</span></td>
+        <td style="text-align:center"><span class="badge badge-amber">${v.perlu}</span></td>
+        <td style="text-align:center"><span class="badge badge-red">${v.kritis}</span></td>
+      </tr>
+    `).join('') + `<tr style="background:var(--g5);font-weight:700">
+      <td></td><td style="color:var(--g2)">TOTAL</td>
+      <td style="text-align:center;color:var(--g2)">${totalKunjungan}</td>
+      <td style="text-align:center;color:var(--g2)">${kondisiCount['Baik']||0}</td>
+      <td style="text-align:center;color:var(--g2)">${kondisiCount['Perlu Perhatian']||0}</td>
+      <td style="text-align:center;color:var(--g2)">${kondisiCount['Kritis']||0}</td>
+    </tr>`;
+  }
+
+  // ---- Tabel Tanaman ----
+  const lapTanamanTable = document.getElementById('lapTanamanTable');
+  if (lapTanamanTable) {
+    const tm = {};
+    d.tanaman.forEach(t=>{
+      const j=t['Jenis Tanaman']||'-';
+      if(!tm[j]) tm[j]={petani:new Set(),luas:0,baik:0,perawatan:0,panen:0,hama:0};
+      tm[j].petani.add(t['Nama Petani']||'');
+      tm[j].luas+=parseFloat(t['Luas Tanam (Ha)'])||0;
+      const s=t['Status']||'';
+      if(s==='Baik') tm[j].baik++;
+      else if(s==='Perawatan') tm[j].perawatan++;
+      else if(s==='Siap Panen') tm[j].panen++;
+      else if(s==='Terserang Hama') tm[j].hama++;
+    });
+    lapTanamanTable.innerHTML = Object.entries(tm).sort((a,b)=>b[1].petani.size-a[1].petani.size)
+      .map(([j,v],i)=>`
+        <tr>
+          <td style="color:var(--s5);font-size:11px">${i+1}</td>
+          <td><strong>${j}</strong></td>
+          <td style="text-align:center;font-weight:700">${v.petani.size}</td>
+          <td style="text-align:center">${v.luas.toFixed(2)}</td>
+          <td style="text-align:center"><span class="badge badge-green">${v.baik}</span></td>
+          <td style="text-align:center"><span class="badge badge-amber">${v.perawatan}</span></td>
+          <td style="text-align:center"><span class="badge badge-blue">${v.panen}</span></td>
+          <td style="text-align:center"><span class="badge badge-red">${v.hama}</span></td>
+        </tr>
+      `).join('');
+  }
+
+  // ---- Tabel Hama ----
+  const lapHamaTable = document.getElementById('lapHamaTable');
+  if (lapHamaTable) {
+    const hm = {};
+    (d.hama||[]).forEach(h=>{
+      const n=h['Nama Hama/Penyakit']||'-';
+      if(!hm[n]) hm[n]={tanaman:new Set(),petani:new Set(),count:0,tingkat:{},status:{}};
+      hm[n].petani.add(h['Nama Petani']||'');
+      hm[n].tanaman.add(h['Nama Tanaman']||h['tanaman']||'');
+      hm[n].count++;
+      const tg=h['Tingkat Serangan']||'-';
+      const st=h['Status']||'-';
+      hm[n].tingkat[tg]=(hm[n].tingkat[tg]||0)+1;
+      hm[n].status[st]=(hm[n].status[st]||0)+1;
+    });
+    if (!Object.keys(hm).length) {
+      lapHamaTable.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--s5);padding:24px">Tidak ada laporan hama & penyakit</td></tr>';
+    } else {
+      lapHamaTable.innerHTML = Object.entries(hm).sort((a,b)=>b[1].count-a[1].count)
+        .map(([n,v],i)=>{
+          const topT=Object.entries(v.tingkat).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+          const topS=Object.entries(v.status).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+          return `<tr>
+            <td style="color:var(--s5);font-size:11px">${i+1}</td>
+            <td><strong>${n}</strong></td>
+            <td style="font-size:12px">${[...v.tanaman].filter(Boolean).join(', ')||'-'}</td>
+            <td style="text-align:center;font-weight:700">${v.count}</td>
+            <td style="text-align:center;font-weight:700">${v.petani.size}</td>
+            <td>${hamaTingkatBadge(topT)}</td>
+            <td>${hamaStatusBadge(topS)}</td>
+          </tr>`;
+        }).join('');
+    }
+  }
+
+  // ---- Daftar Petani Lengkap ----
+  const lapPetaniTable = document.getElementById('lapPetaniTable');
+  if (lapPetaniTable) {
+    lapPetaniTable.innerHTML = d.petani.map((p,i)=>`
+      <tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td><strong>${p['Nama']||'-'}</strong></td>
+        <td>${p['Desa']||'-'}</td>
+        <td>${p['Kecamatan']||'-'}</td>
+        <td>${commodityBadge(p['Komoditas'])}</td>
+        <td style="text-align:center">${p['Total Lahan (Ha)']||'-'}</td>
+        <td style="font-size:12px">${p['HP']||'-'}</td>
+        <td style="font-size:12px">${p['Kelompok Tani']||'-'}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function downloadLaporanPDF() {
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) { alert('Library PDF tidak tersedia'); return; }
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const d = state.data;
+  const now = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  const W = 210, M = 14;
+  let y = 0;
+
+  // Header
+  doc.setFillColor(6, 78, 59);
+  doc.rect(0, 0, W, 32, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20); doc.setFont('helvetica','bold');
+  doc.text('TaniMap', M, 14);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.setTextColor(180,230,200);
+  doc.text('Laporan Sistem Informasi Manajemen Petani', M, 22);
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(9);
+  doc.text('Per ' + now, W - M, 22, {align:'right'});
+  y = 40;
+
+  const section = (title, color=[6,78,59]) => {
+    if (y > 260) { doc.addPage(); y = 14; }
+    doc.setFillColor(...color);
+    doc.rect(M, y, W-2*M, 8, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text(title, M+3, y+5.5);
+    y += 11;
+    doc.setTextColor(30,30,30);
+  };
+
+  const row = (cols, widths, bold=false) => {
+    if (y > 270) { doc.addPage(); y = 14; }
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', bold?'bold':'normal');
+    let x = M;
+    cols.forEach((c,i) => {
+      doc.text(String(c||'-').substring(0,30), x+1, y+4);
+      x += widths[i];
+    });
+    doc.setDrawColor(220,220,220);
+    doc.line(M, y+7, W-M, y+7);
+    y += 8;
+  };
+
+  const thead = (cols, widths) => {
+    doc.setFillColor(240,240,240);
+    doc.rect(M, y, W-2*M, 7, 'F');
+    doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.setTextColor(80,80,80);
+    let x = M;
+    cols.forEach((c,i) => { doc.text(c, x+1, y+5); x += widths[i]; });
+    y += 8;
+    doc.setTextColor(30,30,30);
+  };
+
+  // Kalkulasi
+  const totalPetani    = d.petani.length;
+  const totalLahan     = d.petani.reduce((s,p)=>s+(parseFloat(p['Total Lahan (Ha)'])||0),0);
+  const totalKunjungan = d.kunjungan.length;
+  const totalPenjualan = d.produksi.reduce((s,p)=>s+(parseFloat(p['Total (Rp)'])||0),0);
+  const desaCount = {}; d.petani.forEach(p=>{const ds=p['Desa']||'-';desaCount[ds]=(desaCount[ds]||0)+1;});
+  const kommCount = {}; d.petani.forEach(p=>{const k=p['Komoditas']||'-';kommCount[k]=(kommCount[k]||0)+1;});
+  const topKomm = Object.entries(kommCount).sort((a,b)=>b[1]-a[1])[0];
+  const topDesa = Object.entries(desaCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // RINGKASAN
+  section('RINGKASAN EKSEKUTIF');
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+  const narasi = `Laporan per ${now}. Total ${totalPetani} petani di ${Object.keys(desaCount).length} desa, lahan ${totalLahan.toFixed(2)} Ha. Komoditas terbanyak: ${topKomm?topKomm[0]:'-'} (${topKomm?topKomm[1]:0} petani). Total penjualan: Rp ${totalPenjualan.toLocaleString('id-ID')}.`;
+  const lines = doc.splitTextToSize(narasi, W-2*M);
+  doc.text(lines, M, y); y += lines.length*5 + 4;
+
+  // Stat
+  const stats = [
+    ['Total Petani', totalPetani], ['Total Lahan', totalLahan.toFixed(2)+' Ha'],
+    ['Kunjungan', totalKunjungan], ['Penjualan', 'Rp '+(totalPenjualan/1e6).toFixed(1)+'jt'],
+    ['Tanaman', d.tanaman.length], ['Laporan Hama', (d.hama||[]).length],
+    ['Jumlah Desa', Object.keys(desaCount).length], ['Komoditas', Object.keys(kommCount).length],
+  ];
+  const colW = (W-2*M)/4;
+  stats.forEach(([label,val],i) => {
+    if (i%4===0 && i>0) y += 12;
+    const x = M + (i%4)*colW;
+    if (y > 270) { doc.addPage(); y = 14; }
+    doc.setFillColor(245,250,245);
+    doc.rect(x, y, colW-2, 10, 'F');
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text(label, x+2, y+3.5);
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(6,78,59);
+    doc.text(String(val), x+2, y+8.5);
+  });
+  y += 16;
+
+  // Petani per Desa
+  section('SEBARAN PETANI PER DESA',[37,99,235]);
+  thead(['#','Desa','Kecamatan','Jml Petani','Komoditas Dom.','Lahan (Ha)'],[8,38,38,22,40,36]);
+  Object.entries(desaCount).sort((a,b)=>b[1]-a[1]).forEach(([desa,count],i) => {
+    const p = d.petani.find(p=>p['Desa']===desa);
+    const km = {}; d.petani.filter(p=>p['Desa']===desa).forEach(p=>{const k=p['Komoditas']||'-';km[k]=(km[k]||0)+1;});
+    const topK = Object.entries(km).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+    const lahan = d.petani.filter(p=>p['Desa']===desa).reduce((s,p)=>s+(parseFloat(p['Total Lahan (Ha)'])||0),0);
+    row([i+1, desa, p?.['Kecamatan']||'-', count, topK, lahan.toFixed(2)],[8,38,38,22,40,36]);
+  });
+  row(['','TOTAL','',totalPetani,'',totalLahan.toFixed(2)],[8,38,38,22,40,36],true);
+  y += 4;
+
+  // Produksi
+  section('REKAP PRODUKSI PER KOMODITAS',[217,119,6]);
+  thead(['#','Komoditas','Petani','Luas(Ha)','Produksi','Total(Rp)','Rata-rata/Petani'],[8,30,16,18,30,38,42]);
+  const pm = {};
+  d.produksi.forEach(p=>{const k=p['Komoditas']||'-';if(!pm[k]) pm[k]={petani:new Set(),luas:0,jumlah:0,satuan:'',total:0};pm[k].petani.add(p['Nama Petani']||'');pm[k].luas+=parseFloat(p['Luas (Ha)'])||0;pm[k].jumlah+=parseFloat(p['Jumlah'])||0;pm[k].satuan=p['Satuan']||'';pm[k].total+=parseFloat(p['Total (Rp)'])||0;});
+  Object.entries(pm).sort((a,b)=>b[1].total-a[1].total).forEach(([k,v],i) => {
+    row([i+1,k,v.petani.size,v.luas.toFixed(2),v.jumlah.toLocaleString('id-ID')+' '+v.satuan,'Rp '+v.total.toLocaleString('id-ID'),'Rp '+(v.petani.size>0?Math.round(v.total/v.petani.size).toLocaleString('id-ID'):0)],[8,30,16,18,30,38,42]);
+  });
+  y += 4;
+
+  // Kunjungan
+  section('REKAP KUNJUNGAN LAPANGAN',[124,58,237]);
+  thead(['#','Petugas','Jml Kunjungan','Baik','Perlu Perhatian','Kritis'],[8,50,28,20,40,36]);
+  const km2 = {};
+  d.kunjungan.forEach(k=>{const p=k['Petugas']||'-';if(!km2[p]) km2[p]={count:0,baik:0,perlu:0,kritis:0};km2[p].count++;if(k['Kondisi']==='Baik')km2[p].baik++;else if(k['Kondisi']==='Perlu Perhatian')km2[p].perlu++;else if(k['Kondisi']==='Kritis')km2[p].kritis++;});
+  Object.entries(km2).sort((a,b)=>b[1].count-a[1].count).forEach(([p,v],i) => {
+    row([i+1,p,v.count,v.baik,v.perlu,v.kritis],[8,50,28,20,40,36]);
+  });
+  y += 4;
+
+  // Hama
+  section('REKAP HAMA & PENYAKIT',[220,38,38]);
+  thead(['#','Nama Hama/Penyakit','Tanaman','Laporan','Petani','Tingkat Dom.','Status'],[8,40,30,16,16,30,42]);
+  const hm = {};
+  (d.hama||[]).forEach(h=>{const n=h['Nama Hama/Penyakit']||'-';if(!hm[n]) hm[n]={tanaman:new Set(),petani:new Set(),count:0,tingkat:{},status:{}};hm[n].petani.add(h['Nama Petani']||'');hm[n].tanaman.add(h['Nama Tanaman']||'');hm[n].count++;const tg=h['Tingkat Serangan']||'-';hm[n].tingkat[tg]=(hm[n].tingkat[tg]||0)+1;const st=h['Status']||'-';hm[n].status[st]=(hm[n].status[st]||0)+1;});
+  if (!Object.keys(hm).length) {
+    doc.setFontSize(8.5); doc.setTextColor(150,150,150);
+    doc.text('Tidak ada laporan hama & penyakit', M, y); y += 8;
+  } else {
+    Object.entries(hm).sort((a,b)=>b[1].count-a[1].count).forEach(([n,v],i) => {
+      const topT=Object.entries(v.tingkat).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+      const topS=Object.entries(v.status).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+      row([i+1,n,[...v.tanaman].filter(Boolean).join(','),v.count,v.petani.size,topT,topS],[8,40,30,16,16,30,42]);
+    });
+  }
+  y += 4;
+
+  // Daftar Petani
+  section('DAFTAR PETANI LENGKAP',[6,78,59]);
+  thead(['#','Nama','Desa','Kecamatan','Komoditas','Lahan(Ha)','HP'],[8,38,28,28,28,18,34]);
+  d.petani.forEach((p,i) => {
+    row([i+1,p['Nama']||'-',p['Desa']||'-',p['Kecamatan']||'-',p['Komoditas']||'-',p['Total Lahan (Ha)']||'-',p['HP']||'-'],[8,38,28,28,28,18,34]);
+  });
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i=1; i<=pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(240,240,240);
+    doc.rect(0, 287, W, 10, 'F');
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
+    doc.text('TaniMap — Sistem Informasi Manajemen Petani | ' + now, M, 293);
+    doc.text('Hal. '+i+' / '+pageCount, W-M, 293, {align:'right'});
+  }
+
+  doc.save('Laporan_TaniMap_' + new Date().toISOString().split('T')[0] + '.pdf');
 }
 
 // ============================================================
