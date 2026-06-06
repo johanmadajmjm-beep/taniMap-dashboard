@@ -174,22 +174,16 @@ tr:hover td{background:#f8fafc;}
           <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Total Tanaman</div><i class="fas fa-seedling stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--red)"><div class="stat-val" id="st-hama">—</div><div class="stat-lbl">Laporan Hama</div><i class="fas fa-bug stat-icon"></i></div>
         </div>
-        <div class="chart-grid">
+        <div class="chart-grid" style="grid-template-columns:1fr 1fr">
           <div class="chart-card"><h4>Distribusi Komoditas</h4><p class="chart-sub">Jumlah petani per komoditas</p><canvas id="chartKomoditas"></canvas></div>
           <div class="chart-card"><h4>Status Tanaman</h4><p class="chart-sub">Kondisi tanaman terkini</p><canvas id="chartTanaman"></canvas></div>
-          <div class="chart-card"><h4>Kondisi Kunjungan</h4><p class="chart-sub">Temuan kondisi lapangan</p><canvas id="chartKondisi"></canvas></div>
+
         </div>
         <div class="chart-grid-wide">
           <div class="chart-card"><h4>Petani per Desa</h4><p class="chart-sub">Top 10 desa</p><canvas id="chartDesa" style="max-height:240px"></canvas></div>
           <div class="chart-card"><h4>Produksi per Komoditas</h4><p class="chart-sub">Akumulasi nilai (Rp)</p><canvas id="chartProduksi" style="max-height:240px"></canvas></div>
         </div>
-        <div class="map-wrap">
-          <div class="map-header">
-            <h3><i class="fas fa-map-marked-alt" style="color:var(--g3);margin-right:6px"></i>Sebaran Lokasi Petani</h3>
-            <span id="mapCount" style="font-size:12px;color:var(--s4)"></span>
-          </div>
-          <div id="dashMap"></div>
-        </div>
+
       </div>
 
       <!-- PETA -->
@@ -198,8 +192,8 @@ tr:hover td{background:#f8fafc;}
           <div class="map-header">
             <h3>Peta Sebaran Petani</h3>
             <div style="display:flex;gap:8px">
-              <select class="filter-select" id="petaFilterKomoditas" onchange="renderPetaPage()"><option value="">Semua Komoditas</option></select>
-              <select class="filter-select" id="petaFilterDesa" onchange="renderPetaPage()"><option value="">Semua Desa</option></select>
+              <select class="filter-select" id="petaFilterKomoditas" onchange="renderPetaPage(true)"><option value="">Semua Komoditas</option></select>
+              <select class="filter-select" id="petaFilterDesa" onchange="renderPetaPage(true)"><option value="">Semua Desa</option></select>
             </div>
           </div>
           <div id="petaMap" style="height:620px"></div>
@@ -250,6 +244,24 @@ tr:hover td{background:#f8fafc;}
 
       <!-- PRODUKSI -->
       <div class="page" id="page-produksi">
+
+        <!-- Tabel Rangkuman per Komoditas -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar" style="color:var(--amber);margin-right:6px"></i>Rangkuman Produksi per Komoditas</h3>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Komoditas</th><th>Jumlah Petani</th>
+                <th>Total Luas (Ha)</th><th>Total Produksi</th><th>Total Pendapatan (Rp)</th>
+              </tr></thead>
+              <tbody id="produksiSummaryTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Detail per Petani -->
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-box" style="color:var(--amber);margin-right:6px"></i>Data Produksi</h3>
@@ -271,6 +283,24 @@ tr:hover td{background:#f8fafc;}
 
       <!-- TANAMAN -->
       <div class="page" id="page-tanaman">
+
+        <!-- Tabel Rangkuman per Jenis Tanaman -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar" style="color:var(--purple);margin-right:6px"></i>Rangkuman per Jenis Tanaman</h3>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Jenis Tanaman</th><th>Jumlah Petani</th>
+                <th>Total Luas (Ha)</th><th>Status Dominan</th>
+              </tr></thead>
+              <tbody id="tanamanSummaryTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Detail per Petani -->
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-seedling" style="color:var(--purple);margin-right:6px"></i>Data Tanaman</h3>
@@ -291,6 +321,24 @@ tr:hover td{background:#f8fafc;}
 
       <!-- HAMA -->
       <div class="page" id="page-hama">
+
+        <!-- Tabel Rangkuman per Hama/Penyakit -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar" style="color:var(--red);margin-right:6px"></i>Rangkuman Hama & Penyakit</h3>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr>
+                <th>#</th><th>Nama Hama/Penyakit</th><th>Tanaman Diserang</th>
+                <th>Jumlah Laporan</th><th>Jumlah Petani Terdampak</th><th>Tingkat Dominan</th><th>Status</th>
+              </tr></thead>
+              <tbody id="hamaSummaryTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Detail -->
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-bug" style="color:var(--red);margin-right:6px"></i>Hama & Penyakit</h3>
