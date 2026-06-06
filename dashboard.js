@@ -91,6 +91,7 @@ function renderAll() {
   renderTable('tanaman');
   renderTable('hama');
   renderSummaries();
+  renderPetaInfoBox();
   renderGaleri();
   populatePetaFilters();
   updateCounts();
@@ -103,7 +104,13 @@ function renderStats() {
   const d = state.data;
   document.getElementById('st-petani').textContent    = d.petani.length;
   document.getElementById('st-kunjungan').textContent = d.kunjungan.length;
-  document.getElementById('st-produksi').textContent  = d.produksi.length;
+  const totalPenjualan = d.produksi.reduce((s,p)=>s+(parseFloat(p['Total (Rp)'])||0),0);
+  const penjualanStr = totalPenjualan >= 1e9
+    ? 'Rp ' + (totalPenjualan/1e9).toFixed(1) + 'M'
+    : totalPenjualan >= 1e6
+    ? 'Rp ' + (totalPenjualan/1e6).toFixed(1) + 'jt'
+    : 'Rp ' + totalPenjualan.toLocaleString('id-ID');
+  document.getElementById('st-produksi').textContent  = penjualanStr;
   document.getElementById('st-tanaman').textContent   = d.tanaman.length;
   document.getElementById('st-hama').textContent      = (d.hama||[]).length;
 }
@@ -135,19 +142,21 @@ function renderCharts() {
   renderChart('chartTanaman','doughnut',Object.keys(stCount),Object.values(stCount),PALETTE);
 
 
-  // 4. Petani per Desa (bar - top 10)
+  // 4. Petani per Desa (bar - top 10) - warna hijau gradient
   const desaCount = {};
   d.petani.forEach(p => { const ds = p['Desa']||'?'; desaCount[ds]=(desaCount[ds]||0)+1; });
   const desaTop = Object.entries(desaCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  renderChart('chartDesa','bar',desaTop.map(x=>x[0]),desaTop.map(x=>x[1]),'#059669');
+  const desaColors = desaTop.map((_,i) => `hsl(${152 - i*6}, ${75-i*2}%, ${42+i*2}%)`);
+  renderChart('chartDesa','bar',desaTop.map(x=>x[0]),desaTop.map(x=>x[1]),desaColors);
 
-  // 5. Total Produksi per Komoditas (horizontal bar)
+  // 5. Total Produksi per Komoditas (horizontal bar) - warna berbeda
   const prodVal = {};
   d.produksi.forEach(p => {
     const k = p['Komoditas']||'Lainnya';
     prodVal[k] = (prodVal[k]||0) + (parseFloat(p['Total (Rp)'])||0);
   });
-  renderChart('chartProduksi','bar',Object.keys(prodVal),Object.values(prodVal),'#d97706',true,true);
+  const prodColors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#0891b2','#f97316','#14b8a6'];
+  renderChart('chartProduksi','bar',Object.keys(prodVal),Object.values(prodVal),prodColors,true,true);
 }
 
 function renderChart(id, type, labels, data, color, isCurrency=false, horizontal=false) {
@@ -221,8 +230,8 @@ const COMM_COLORS = {
 function commColor(k) { return COMM_COLORS[k]||'#64748b'; }
 
 // Default view: Indonesia center
-const INDONESIA_CENTER = [-2.5, 118];
-const INDONESIA_ZOOM   = 5;
+const INDONESIA_CENTER = [-8.65, 121.0];  // Nusa Tenggara Timur
+const INDONESIA_ZOOM   = 8;
 
 function initMap(containerId) {
   const map = L.map(containerId, { zoomControl: true });
@@ -257,6 +266,48 @@ function addMarkersToMap(map, petaniList) {
 }
 
 
+
+function renderPetaInfoBox() {
+  const box = document.getElementById('petaInfoBox');
+  if (!box) return;
+  const d = state.data;
+  const withGPS = d.petani.filter(p=>p['Latitude']&&p['Longitude']);
+
+  // Komoditas terbanyak
+  const kommCount = {};
+  d.petani.forEach(p => { const k=p['Komoditas']||'-'; kommCount[k]=(kommCount[k]||0)+1; });
+  const topKomm = Object.entries(kommCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // Desa terbanyak
+  const desaCount = {};
+  d.petani.forEach(p => { const ds=p['Desa']||'-'; desaCount[ds]=(desaCount[ds]||0)+1; });
+  const topDesa = Object.entries(desaCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // Total lahan
+  const totalLahan = d.petani.reduce((s,p)=>s+(parseFloat(p['Total Lahan (Ha)'])||0),0);
+
+  // Total penjualan
+  const totalJual = d.produksi.reduce((s,p)=>s+(parseFloat(p['Total (Rp)'])||0),0);
+
+  const infoItems = [
+    { icon:'fas fa-map-pin', color:'var(--g3)', label:'Titik GPS Terpetakan', val: withGPS.length + ' dari ' + d.petani.length + ' petani' },
+    { icon:'fas fa-seedling', color:'var(--amber)', label:'Komoditas Terbanyak', val: topKomm ? topKomm[0] + ' (' + topKomm[1] + ' petani)' : '-' },
+    { icon:'fas fa-map', color:'var(--blue)', label:'Desa Terbanyak', val: topDesa ? topDesa[0] + ' (' + topDesa[1] + ' petani)' : '-' },
+    { icon:'fas fa-chart-line', color:'var(--purple)', label:'Total Lahan', val: totalLahan.toFixed(2) + ' Ha' },
+  ];
+
+  box.innerHTML = infoItems.map(item => `
+    <div style="background:var(--card);border-radius:10px;padding:12px 14px;border:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:50%;background:${item.color}20;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="${item.icon}" style="color:${item.color};font-size:14px"></i>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--s5);font-weight:600;text-transform:uppercase;letter-spacing:.04em">${item.label}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--s1);margin-top:2px">${item.val}</div>
+      </div>
+    </div>
+  `).join('');
+}
 
 function renderPetaPage(fitToData=false) {
   const isNew = !state.maps.peta;
