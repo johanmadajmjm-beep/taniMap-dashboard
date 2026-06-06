@@ -2,7 +2,7 @@
 //  CONFIG
 // ============================================================
 const CONFIG = {
-  API_URL:      'https://script.google.com/macros/s/AKfycbwEzELR_5PR2M9RSfUDJM_bVPi-JjdJpumuYarS2RYgaY3ZCBxlWLKwctNfT3M66ca6/exec',
+  API_URL:      'https://script.google.com/macros/s/AKfycbxwXH69dwoRXaXb7AjIhzxj04Ju5RtQkqyj8l6q7DCbnqsHJ99vzTGxt7EwzHiIQsTD/exec',
   DRIVE_FOLDER: '1r0_NgQg7iE9LfZwm3MfuW4fRXg54vBuD',
 };
 
@@ -24,16 +24,33 @@ const PER_PAGE = 25;
 // ============================================================
 //  DATA
 // ============================================================
+
+// JSONP fetch untuk bypass CORS Apps Script
+function fetchJSONP(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const script = document.createElement('script');
+    window[cbName] = (data) => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = () => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('Failed to fetch'));
+    };
+    script.src = url + '&callback=' + cbName;
+    document.body.appendChild(script);
+  });
+}
+
 async function refreshData() {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('loading');
   showLoading('Memuat data dari Google Sheets...');
   try {
-    const res  = await fetch(`${CONFIG.API_URL}?action=all`, {
-      redirect: 'follow',
-      method: 'GET',
-    });
-    const json = await res.json();
+    const json = await fetchJSONP(`${CONFIG.API_URL}?action=all`);
     if (json.status !== 'ok') throw new Error(json.message || 'Gagal memuat data');
     state.data = json.data;
     // Reset filters
