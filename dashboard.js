@@ -105,12 +105,13 @@ function renderStats() {
   document.getElementById('st-petani').textContent    = d.petani.length;
   document.getElementById('st-kunjungan').textContent = d.kunjungan.length;
   const totalPenjualan = d.produksi.reduce((s,p)=>s+(parseFloat(p['Total (Rp)'])||0),0);
+  const totalLahanProd = d.produksi.reduce((s,p)=>s+(parseFloat(p['Luas (Ha)'])||0),0);
   const penjualanStr = totalPenjualan >= 1e9
-    ? 'Rp ' + (totalPenjualan/1e9).toFixed(1) + 'M'
+    ? (totalPenjualan/1e9).toFixed(1) + 'M'
     : totalPenjualan >= 1e6
-    ? 'Rp ' + (totalPenjualan/1e6).toFixed(1) + 'jt'
-    : 'Rp ' + totalPenjualan.toLocaleString('id-ID');
-  document.getElementById('st-produksi').textContent  = penjualanStr;
+    ? (totalPenjualan/1e6).toFixed(1) + 'jt'
+    : totalPenjualan.toLocaleString('id-ID');
+  document.getElementById('st-produksi').textContent = penjualanStr + ' / ' + totalLahanProd.toFixed(1) + 'Ha';
   document.getElementById('st-tanaman').textContent   = d.tanaman.length;
   document.getElementById('st-hama').textContent      = (d.hama||[]).length;
 }
@@ -155,8 +156,8 @@ function renderCharts() {
     const k = p['Komoditas']||'Lainnya';
     prodVal[k] = (prodVal[k]||0) + (parseFloat(p['Total (Rp)'])||0);
   });
-  const prodColors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#0891b2','#f97316','#14b8a6'];
-  renderChart('chartProduksi','bar',Object.keys(prodVal),Object.values(prodVal),prodColors,true,true);
+  const prodColors = Object.keys(prodVal).map((_,i) => `hsl(${35 + i*28}, ${80-i*3}%, ${48+i*2}%)`);
+  renderChart('chartProduksi','bar',Object.keys(prodVal),Object.values(prodVal),prodColors,true,false);
 }
 
 function renderChart(id, type, labels, data, color, isCurrency=false, horizontal=false) {
@@ -187,7 +188,7 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
     options: {
       indexAxis: horizontal ? 'y' : 'x',
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           display: type==='doughnut',
@@ -250,17 +251,33 @@ function addMarkersToMap(map, petaniList) {
     const lng = parseFloat(p['Longitude']);
     if (isNaN(lat)||isNaN(lng)) return;
     bounds.push([lat,lng]);
+    const komoditas = p['Komoditas']||'-';
+    const color = commColor(komoditas);
     L.circleMarker([lat,lng],{
-      radius:9, fillColor:commColor(p['Komoditas']),
-      color:'white', weight:2, opacity:1, fillOpacity:0.88
+      radius:10, fillColor:color,
+      color:'white', weight:2.5, opacity:1, fillOpacity:0.9
     }).addTo(map).bindPopup(`
-      <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:170px">
-        <div style="font-weight:700;font-size:13px;margin-bottom:4px">${p['Nama']||'-'}</div>
-        <div style="font-size:12px;color:#64748b">📍 ${p['Desa']||'-'}, ${p['Kecamatan']||'-'}</div>
-        <div style="font-size:12px;margin-top:3px">🌿 <b>${p['Komoditas']||'-'}</b></div>
-        <div style="font-size:12px">🗺️ ${p['Total Lahan (Ha)']||'-'} Ha</div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:220px;max-width:260px">
+        <div style="background:${color};color:white;padding:10px 12px;margin:-1px -1px 10px;border-radius:6px 6px 0 0">
+          <div style="font-weight:800;font-size:14px">${p['Nama']||'-'}</div>
+          <div style="font-size:11px;opacity:.85;margin-top:2px">${p['Desa']||'-'}, ${p['Kecamatan']||'-'}</div>
+        </div>
+        <div style="padding:0 12px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="font-size:11px;color:#64748b">Komoditas</div>
+          <div style="font-size:12px;font-weight:700;color:#059669">${komoditas}</div>
+          <div style="font-size:11px;color:#64748b">Total Lahan</div>
+          <div style="font-size:12px;font-weight:600">${p['Total Lahan (Ha)']||'-'} Ha</div>
+          <div style="font-size:11px;color:#64748b">Kecamatan</div>
+          <div style="font-size:12px;font-weight:600">${p['Kecamatan']||'-'}</div>
+          <div style="font-size:11px;color:#64748b">Kabupaten</div>
+          <div style="font-size:12px;font-weight:600">${p['Kabupaten']||'-'}</div>
+          <div style="font-size:11px;color:#64748b">HP</div>
+          <div style="font-size:12px;font-weight:600">${p['HP']||'-'}</div>
+          <div style="font-size:11px;color:#64748b">Kelompok Tani</div>
+          <div style="font-size:12px;font-weight:600">${p['Kelompok Tani']||'-'}</div>
+        </div>
       </div>
-    `);
+    `,{maxWidth:280});
   });
   return bounds;
 }
@@ -753,7 +770,18 @@ function hideLoading() {
   }
 }
 
+
+// Responsive chart resize
+window.addEventListener('resize', () => {
+  Object.values(state.charts).forEach(chart => {
+    if (chart) chart.resize();
+  });
+});
 // Auto load data saat halaman dibuka
 document.addEventListener('DOMContentLoaded', () => {
   refreshData();
 });
+// Fallback jika DOMContentLoaded sudah lewat
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(refreshData, 100);
+}
