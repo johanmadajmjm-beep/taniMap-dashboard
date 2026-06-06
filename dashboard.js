@@ -2,7 +2,7 @@
 //  CONFIG
 // ============================================================
 const CONFIG = {
-  API_URL:      'https://script.google.com/macros/s/AKfycbxwXH69dwoRXaXb7AjIhzxj04Ju5RtQkqyj8l6q7DCbnqsHJ99vzTGxt7EwzHiIQsTD/exec',
+  API_URL:      'https://script.google.com/macros/s/AKfycbwoEMQvUoiZbdvrg9GpTX0tpEB53n7-gGK45QYUzVc-c-_iEik4vZ2A_KPr_lFpDM7a/exec',
   DRIVE_FOLDER: '1r0_NgQg7iE9LfZwm3MfuW4fRXg54vBuD',
 };
 
@@ -76,9 +76,16 @@ async function refreshData() {
 }
 
 async function loadDriveFiles() {
-  // Drive API butuh OAuth — dinonaktifkan sementara
-  // Galeri akan diaktifkan kembali setelah sistem auth dipasang
-  state.driveFiles = [];
+  try {
+    const json = await fetchJSONP(`${CONFIG.API_URL}?action=photos`);
+    if (json.status === 'ok') {
+      state.driveFiles = json.data.photos || [];
+    } else {
+      state.driveFiles = [];
+    }
+  } catch(e) {
+    state.driveFiles = [];
+  }
 }
 
 function renderAll() {
