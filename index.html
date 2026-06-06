@@ -316,6 +316,7 @@ tr:hover td{background:rgba(5,150,105,.04);}
       <button class="nav-item" onclick="showPage('produksi')"><i class="fas fa-box"></i> Produksi</button>
       <button class="nav-item" onclick="showPage('tanaman')"><i class="fas fa-seedling"></i> Tanaman</button>
       <button class="nav-item" onclick="showPage('hama')"><i class="fas fa-bug"></i> Hama & Penyakit</button>
+      <button class="nav-item" onclick="showPage('laporan')"><i class="fas fa-file-alt"></i> Laporan</button>
       <button class="nav-item" onclick="showPage('galeri')"><i class="fas fa-images"></i> Galeri Foto</button>
     </nav>
     <div style="padding:14px;border-top:1px solid rgba(255,255,255,.06)">
@@ -546,6 +547,121 @@ tr:hover td{background:rgba(5,150,105,.04);}
         </div><!-- end split-page -->
       </div>
 
+      <!-- LAPORAN -->
+      <div class="page" id="page-laporan">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div>
+            <div style="font-size:13px;color:var(--s4);margin-top:2px">
+              Laporan lengkap data TaniMap — digenerate otomatis dari semua data tersimpan
+            </div>
+          </div>
+          <button onclick="downloadLaporanPDF()" style="display:flex;align-items:center;gap:8px;
+            padding:10px 20px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;
+            border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
+            font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 12px rgba(220,38,38,.3);
+            transition:all .2s"
+            onmouseover="this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.transform=''">
+            <i class="fas fa-file-pdf"></i> Download PDF
+          </button>
+        </div>
+
+        <!-- Konten laporan yang akan di-print -->
+        <div id="laporanContent">
+
+          <!-- RINGKASAN EKSEKUTIF -->
+          <div class="card" style="margin-bottom:16px" id="lap-ringkasan">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-pie" style="color:var(--g3);margin-right:8px"></i>Ringkasan Eksekutif</h3>
+              <span id="lapTanggal" style="font-size:12px;color:var(--s4)"></span>
+            </div>
+            <div class="card-body" style="padding:20px">
+              <div id="lapNarasi" style="font-size:13.5px;line-height:1.8;color:var(--s2);margin-bottom:20px"></div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="lapStatGrid"></div>
+            </div>
+          </div>
+
+          <!-- PETANI PER DESA -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-map-marker-alt" style="color:var(--blue);margin-right:8px"></i>Sebaran Petani per Desa</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Desa</th><th>Kecamatan</th><th>Jumlah Petani</th><th>Komoditas Dominan</th><th>Total Lahan (Ha)</th></tr></thead>
+                <tbody id="lapDesaTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PRODUKSI PER KOMODITAS -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-box" style="color:var(--amber);margin-right:8px"></i>Rekap Produksi per Komoditas</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Komoditas</th><th>Jumlah Petani</th><th>Total Luas (Ha)</th><th>Total Produksi</th><th>Total Pendapatan (Rp)</th><th>Rata-rata/Petani (Rp)</th></tr></thead>
+                <tbody id="lapProduksiTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- REKAP KUNJUNGAN -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-clipboard-list" style="color:var(--purple);margin-right:8px"></i>Rekap Kunjungan Lapangan</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Petugas</th><th>Jumlah Kunjungan</th><th>Kondisi Baik</th><th>Perlu Perhatian</th><th>Kritis</th></tr></thead>
+                <tbody id="lapKunjunganTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- REKAP TANAMAN -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-seedling" style="color:var(--teal);margin-right:8px"></i>Rekap Status Tanaman</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Jenis Tanaman</th><th>Jumlah Petani</th><th>Total Luas (Ha)</th><th>Baik</th><th>Perawatan</th><th>Siap Panen</th><th>Terserang Hama</th></tr></thead>
+                <tbody id="lapTanamanTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- REKAP HAMA -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-bug" style="color:var(--red);margin-right:8px"></i>Rekap Hama & Penyakit</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Nama Hama/Penyakit</th><th>Tanaman Diserang</th><th>Jumlah Laporan</th><th>Petani Terdampak</th><th>Tingkat Dominan</th><th>Status</th></tr></thead>
+                <tbody id="lapHamaTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- DAFTAR PETANI LENGKAP -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <h3><i class="fas fa-users" style="color:var(--g3);margin-right:8px"></i>Daftar Petani Lengkap</h3>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead><tr><th>#</th><th>Nama</th><th>Desa</th><th>Kecamatan</th><th>Komoditas</th><th>Total Lahan (Ha)</th><th>HP</th><th>Kelompok Tani</th></tr></thead>
+                <tbody id="lapPetaniTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- end laporanContent -->
+      </div>
+
       <!-- GALERI -->
       <div class="page" id="page-galeri">
         <div class="card">
@@ -576,6 +692,7 @@ tr:hover td{background:rgba(5,150,105,.04);}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="dashboard.js"></script>
 </body>
