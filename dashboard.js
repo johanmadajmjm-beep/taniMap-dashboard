@@ -13,7 +13,7 @@ let state = {
   data: { petani:[], kunjungan:[], produksi:[], tanaman:[], hama:[] },
   driveFiles: [],
   charts: {},
-  maps: { overview: null, peta: null },
+  maps: { peta: null },
   currentPage: 'overview',
   pagination: { petani:1, kunjungan:1, produksi:1, tanaman:1 },
   filtered: { petani:[], kunjungan:[], produksi:[], tanaman:[], hama:[] },
@@ -84,13 +84,13 @@ async function loadDriveFiles() {
 function renderAll() {
   renderStats();
   renderCharts();
-  renderOverviewMap();
-  renderPetaPage();
+  // peta dirender saat halaman dibuka
   renderTable('petani');
   renderTable('kunjungan');
   renderTable('produksi');
   renderTable('tanaman');
   renderTable('hama');
+  renderSummaries();
   renderGaleri();
   populatePetaFilters();
   updateCounts();
@@ -134,10 +134,6 @@ function renderCharts() {
   d.tanaman.forEach(t => { const s = t['Status']||'Tidak Diketahui'; stCount[s]=(stCount[s]||0)+1; });
   renderChart('chartTanaman','doughnut',Object.keys(stCount),Object.values(stCount),PALETTE);
 
-  // 3. Kondisi Kunjungan (doughnut)
-  const kdCount = {};
-  d.kunjungan.forEach(k => { const c = k['Kondisi']||'Tidak Diketahui'; kdCount[c]=(kdCount[c]||0)+1; });
-  renderChart('chartKondisi','doughnut',Object.keys(kdCount),Object.values(kdCount),['#059669','#d97706','#dc2626','#64748b']);
 
   // 4. Petani per Desa (bar - top 10)
   const desaCount = {};
@@ -260,46 +256,30 @@ function addMarkersToMap(map, petaniList) {
   return bounds;
 }
 
-function renderOverviewMap() {
-  const isNew = !state.maps.overview;
-  if (isNew) {
-    state.maps.overview = initMap('dashMap');
-  }
-  const map = state.maps.overview;
-  const withGPS = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
-  document.getElementById('mapCount').textContent = `${withGPS.length} titik GPS dari ${state.data.petani.length} petani`;
-  // Selalu reset ke Indonesia dulu
-  map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
-  addMarkersToMap(map, withGPS);
-  if (withGPS.length > 0) {
-    const bounds = withGPS
-      .filter(p => !isNaN(parseFloat(p['Latitude'])) && !isNaN(parseFloat(p['Longitude'])))
-      .map(p => [parseFloat(p['Latitude']), parseFloat(p['Longitude'])]);
-    if (bounds.length) setTimeout(() => map.fitBounds(bounds, {padding:[50,50], maxZoom:13}), 500);
-  }
-}
 
-function renderPetaPage() {
-  if (!state.maps.peta) {
-    state.maps.peta = initMap('petaMap');
-  }
+
+function renderPetaPage(fitToData=false) {
+  const isNew = !state.maps.peta;
+  if (isNew) state.maps.peta = initMap('petaMap');
   const map = state.maps.peta;
   const fKom  = document.getElementById('petaFilterKomoditas')?.value||'';
   const fDesa = document.getElementById('petaFilterDesa')?.value||'';
   let list = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   if (fKom)  list = list.filter(p=>p['Komoditas']===fKom);
   if (fDesa) list = list.filter(p=>p['Desa']===fDesa);
-  // Reset ke Indonesia dulu
+  // Selalu mulai dari Indonesia
   map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
   addMarkersToMap(map, list);
-  if (list.length > 0) {
+  // Zoom ke data hanya jika user aktif memfilter
+  if (fitToData && list.length > 0) {
     const bounds = list
       .filter(p=>!isNaN(parseFloat(p['Latitude']))&&!isNaN(parseFloat(p['Longitude'])))
       .map(p=>[parseFloat(p['Latitude']),parseFloat(p['Longitude'])]);
-    if (bounds.length) setTimeout(()=>map.fitBounds(bounds,{padding:[50,50],maxZoom:13}),300);
+    if (bounds.length) setTimeout(()=>map.fitBounds(bounds,{padding:[50,50],maxZoom:13}),200);
   }
   setTimeout(()=>map.invalidateSize(),150);
 }
+
 
 function populatePetaFilters() {
   const ks = document.getElementById('petaFilterKomoditas');
@@ -503,10 +483,168 @@ function showPage(id) {
   document.querySelector(`[onclick="showPage('${id}')"]`)?.classList.add('active');
   document.getElementById('pageTitle').textContent = PAGE_TITLES[id]||id;
   state.currentPage = id;
-  if (id==='peta'&&state.maps.peta) { setTimeout(()=>state.maps.peta.invalidateSize(),100); renderPetaPage(); }
-  if (id==='overview'&&state.maps.overview) setTimeout(()=>state.maps.overview.invalidateSize(),100);
+  if (id==='peta') {
+    if (!state.maps.peta) renderPetaPage(false);
+    else setTimeout(()=>state.maps.peta.invalidateSize(),100);
+  }
 }
 
+
+
+// ============================================================
+//  SUMMARY TABLES
+// ============================================================
+
+function renderSummaries() {
+  renderProduksiSummary();
+  renderTanamanSummary();
+  renderHamaSummary();
+}
+
+function renderProduksiSummary() {
+  const tbody = document.getElementById('produksiSummaryTable');
+  if (!tbody) return;
+
+  // Kalkulasi per komoditas
+  const map = {};
+  state.data.produksi.forEach(p => {
+    const k = p['Komoditas'] || 'Tidak Diketahui';
+    if (!map[k]) map[k] = { petani: new Set(), luas: 0, jumlah: 0, satuan: '', total: 0 };
+    map[k].petani.add(p['Nama Petani'] || '');
+    map[k].luas   += parseFloat(p['Luas (Ha)']) || 0;
+    map[k].jumlah += parseFloat(p['Jumlah'])    || 0;
+    map[k].satuan  = p['Satuan'] || '';
+    map[k].total  += parseFloat(p['Total (Rp)']) || 0;
+  });
+
+  const rows = Object.entries(map).sort((a,b) => b[1].total - a[1].total);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Belum ada data produksi</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(([kom, d], i) => `
+    <tr>
+      <td style="color:var(--s5);font-size:11px">${i+1}</td>
+      <td>${commodityBadge(kom)}</td>
+      <td style="font-weight:600;text-align:center">${d.petani.size}</td>
+      <td style="text-align:center">${d.luas.toFixed(2)} Ha</td>
+      <td style="text-align:center">${d.jumlah.toLocaleString('id-ID')} ${d.satuan}</td>
+      <td style="font-weight:700;color:var(--g2)">Rp ${d.total.toLocaleString('id-ID')}</td>
+    </tr>
+  `).join('');
+
+  // Baris total
+  const totalPetani = new Set(state.data.produksi.map(p=>p['Nama Petani'])).size;
+  const totalLuas   = Object.values(map).reduce((s,d)=>s+d.luas,0);
+  const totalRp     = Object.values(map).reduce((s,d)=>s+d.total,0);
+  tbody.innerHTML += `
+    <tr style="background:var(--g5);font-weight:700">
+      <td></td>
+      <td style="color:var(--g2)">TOTAL</td>
+      <td style="text-align:center;color:var(--g2)">${totalPetani}</td>
+      <td style="text-align:center;color:var(--g2)">${totalLuas.toFixed(2)} Ha</td>
+      <td></td>
+      <td style="color:var(--g2)">Rp ${totalRp.toLocaleString('id-ID')}</td>
+    </tr>
+  `;
+}
+
+function renderTanamanSummary() {
+  const tbody = document.getElementById('tanamanSummaryTable');
+  if (!tbody) return;
+
+  // Kalkulasi per jenis tanaman
+  const map = {};
+  state.data.tanaman.forEach(t => {
+    const k = t['Jenis Tanaman'] || 'Tidak Diketahui';
+    if (!map[k]) map[k] = { petani: new Set(), luas: 0, statusCount: {} };
+    map[k].petani.add(t['Nama Petani'] || '');
+    map[k].luas += parseFloat(t['Luas Tanam (Ha)']) || 0;
+    const st = t['Status'] || 'Tidak Diketahui';
+    map[k].statusCount[st] = (map[k].statusCount[st] || 0) + 1;
+  });
+
+  const rows = Object.entries(map).sort((a,b) => b[1].petani.size - a[1].petani.size);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>Belum ada data tanaman</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(([jenis, d], i) => {
+    const dominanStatus = Object.entries(d.statusCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
+    return `
+      <tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td style="font-weight:600">${jenis}</td>
+        <td style="font-weight:600;text-align:center">${d.petani.size}</td>
+        <td style="text-align:center">${d.luas.toFixed(2)} Ha</td>
+        <td>${statusBadge(dominanStatus)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Total
+  const totalPetani = new Set(state.data.tanaman.map(t=>t['Nama Petani'])).size;
+  const totalLuas   = Object.values(map).reduce((s,d)=>s+d.luas,0);
+  tbody.innerHTML += `
+    <tr style="background:var(--g5);font-weight:700">
+      <td></td>
+      <td style="color:var(--g2)">TOTAL</td>
+      <td style="text-align:center;color:var(--g2)">${totalPetani}</td>
+      <td style="text-align:center;color:var(--g2)">${totalLuas.toFixed(2)} Ha</td>
+      <td></td>
+    </tr>
+  `;
+}
+
+function renderHamaSummary() {
+  const tbody = document.getElementById('hamaSummaryTable');
+  if (!tbody) return;
+
+  // Kalkulasi per nama hama
+  const map = {};
+  (state.data.hama || []).forEach(h => {
+    const k = h['Nama Hama/Penyakit'] || 'Tidak Diketahui';
+    if (!map[k]) map[k] = {
+      tanaman: new Set(), petani: new Set(),
+      count: 0, tingkat: {}, status: {}
+    };
+    map[k].petani.add(h['Nama Petani'] || '');
+    map[k].tanaman.add(h['Nama Tanaman'] || h['tanaman'] || '');
+    map[k].count++;
+    const tg = h['Tingkat Serangan'] || '-';
+    const st = h['Status'] || '-';
+    map[k].tingkat[tg] = (map[k].tingkat[tg] || 0) + 1;
+    map[k].status[st]  = (map[k].status[st]  || 0) + 1;
+  });
+
+  const rows = Object.entries(map).sort((a,b) => b[1].count - a[1].count);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Belum ada laporan hama</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(([nama, d], i) => {
+    const dominanTingkat = Object.entries(d.tingkat).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
+    const dominanStatus  = Object.entries(d.status).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
+    const tanamanList = [...d.tanaman].filter(Boolean).join(', ') || '-';
+    return `
+      <tr>
+        <td style="color:var(--s5);font-size:11px">${i+1}</td>
+        <td style="font-weight:600">${nama}</td>
+        <td style="font-size:12px">${tanamanList}</td>
+        <td style="text-align:center;font-weight:600">${d.count}</td>
+        <td style="text-align:center;font-weight:600">${d.petani.size}</td>
+        <td>${hamaTingkatBadge(dominanTingkat)}</td>
+        <td>${hamaStatusBadge(dominanStatus)}</td>
+      </tr>
+    `;
+  }).join('');
+}
 
 // ============================================================
 //  HELPERS
