@@ -29,7 +29,10 @@ async function refreshData() {
   btn.classList.add('loading');
   showLoading('Memuat data dari Google Sheets...');
   try {
-    const res  = await fetch(`${CONFIG.API_URL}?action=all`);
+    const res  = await fetch(`${CONFIG.API_URL}?action=all`, {
+      redirect: 'follow',
+      method: 'GET',
+    });
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message || 'Gagal memuat data');
     state.data = json.data;
@@ -533,10 +536,16 @@ function hamaStatusBadge(s) {
 //  LOADING
 // ============================================================
 function showLoading(msg='Memuat...') {
-  document.getElementById('loadingMsg').textContent=msg;
-  document.getElementById('loadingOverlay').classList.add('show');
+  const bar = document.getElementById('loadingBar');
+  if (bar) { bar.style.width='60%'; bar.style.opacity='1'; }
 }
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+function hideLoading() {
+  const bar = document.getElementById('loadingBar');
+  if (bar) {
+    bar.style.width='100%';
+    setTimeout(() => { bar.style.opacity='0'; bar.style.width='0'; }, 400);
+  }
+}
 
 // Auto load data saat halaman dibuka
 document.addEventListener('DOMContentLoaded', () => {
