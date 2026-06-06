@@ -69,40 +69,28 @@ function showApp() {
   sessionStorage.setItem('tm_user', JSON.stringify(state.user));
 }
 
-// Cek session saat halaman dimuat
+// Cek session saat halaman dimuat — tampilkan tombol "Lanjutkan" jika ada session
 window.addEventListener('load', () => {
   const saved = sessionStorage.getItem('tm_user');
   if (saved) {
     try {
       state.user = JSON.parse(saved);
-      // Token sudah expire setelah 1 jam — minta token baru silent
-      silentLogin();
+      // Tampilkan tombol "Lanjutkan sebagai Johan" di login page
+      showResumeBtn();
     } catch(e) { sessionStorage.removeItem('tm_user'); }
   }
 });
 
-function silentLogin() {
-  // Minta token baru tanpa popup jika user sudah pernah login
-  try {
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: CONFIG.CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/drive.readonly email profile',
-      prompt: '', // silent — tidak tampilkan popup jika sudah pernah login
-      callback: async (resp) => {
-        if (resp.error || !resp.access_token) {
-          // Silent login gagal, tampilkan login page
-          sessionStorage.removeItem('tm_user');
-          return;
-        }
-        state.token = resp.access_token;
-        showApp();
-        await refreshData();
-      }
-    });
-    client.requestAccessToken({ prompt: '' });
-  } catch(e) {
-    sessionStorage.removeItem('tm_user');
-  }
+function showResumeBtn() {
+  const name = state.user?.name?.split(' ')[0] || 'Admin';
+  const loginCard = document.querySelector('.login-card');
+  if (!loginCard) return;
+  const resumeBtn = document.createElement('button');
+  resumeBtn.className = 'google-btn';
+  resumeBtn.style.cssText = 'background:var(--g2);color:white;margin-top:10px;';
+  resumeBtn.innerHTML = `<i class="fas fa-user-circle" style="font-size:18px"></i> Lanjutkan sebagai ${name}`;
+  resumeBtn.onclick = loginWithGoogle;
+  loginCard.appendChild(resumeBtn);
 }
 
 // ============================================================
@@ -230,12 +218,13 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
   if (state.charts[id]) state.charts[id].destroy();
   const colors = Array.isArray(color) ? color : Array(data.length).fill(color);
 
-  const xTickCb = (isCurrency && !horizontal)
-    ? function(v) { return 'Rp'+(v/1e6).toFixed(0)+'jt'; }
-    : undefined;
-  const yTickCb = (isCurrency && horizontal)
-    ? function(v) { return 'Rp'+(v/1e6).toFixed(0)+'jt'; }
-    : undefined;
+  // Untuk bar chart: sumbu kategori tidak perlu callback khusus
+  // Sumbu nilai (angka) yang perlu diformat
+  const valueTicks = isCurrency
+    ? { font:{size:10}, callback: function(v) { return 'Rp '+(v/1e6).toFixed(1)+'jt'; } }
+    : { font:{size:10} };
+
+  const categoryTicks = { font:{size:9.5}, maxRotation: horizontal ? 0 : 30 };
 
   state.charts[id] = new Chart(ctx, {
     type,
@@ -244,7 +233,6 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
       datasets: [{
         data,
         backgroundColor: type==='doughnut' ? colors : (Array.isArray(color)?colors:color),
-        borderColor: type==='bar' ? 'transparent' : 'transparent',
         borderRadius: type==='bar' ? 5 : 0,
         borderWidth: 0,
       }]
@@ -261,21 +249,23 @@ function renderChart(id, type, labels, data, color, isCurrency=false, horizontal
         },
         tooltip: {
           callbacks: {
-            label: function(ctx) {
-              if (isCurrency) return ' Rp ' + Number(ctx.raw).toLocaleString('id-ID');
-              return ' ' + ctx.raw;
+            label: function(c) {
+              if (isCurrency) return ' Rp ' + Number(c.raw).toLocaleString('id-ID');
+              return ' ' + c.raw;
             }
           }
         }
       },
       scales: type==='bar' ? {
-        x: {
-          grid: { display: horizontal },
-          ticks: { font:{size:10}, maxRotation:35, callback: xTickCb }
+        // Sumbu kategori (nama desa/komoditas)
+        [horizontal ? 'y' : 'x']: {
+          grid: { display: false },
+          ticks: categoryTicks,
         },
-        y: {
-          grid: { display: !horizontal, color:'#f1f5f9' },
-          ticks: { font:{size:10}, callback: yTickCb }
+        // Sumbu nilai (angka)
+        [horizontal ? 'x' : 'y']: {
+          grid: { color:'#f1f5f9' },
+          ticks: valueTicks,
         }
       } : {}
     }
@@ -329,18 +319,21 @@ function addMarkersToMap(map, petaniList) {
 }
 
 function renderOverviewMap() {
-  if (!state.maps.overview) {
+  const isNew = !state.maps.overview;
+  if (isNew) {
     state.maps.overview = initMap('dashMap');
   }
   const map = state.maps.overview;
   const withGPS = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   document.getElementById('mapCount').textContent = `${withGPS.length} titik GPS dari ${state.data.petani.length} petani`;
-  // Reset ke view Indonesia dulu
+  addMarkersToMap(map, withGPS);
+  // Selalu mulai dari Indonesia, baru animasi ke titik jika ada
   map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
-  const bounds = addMarkersToMap(map, withGPS);
-  // Zoom ke titik petani hanya jika ada data
-  if (bounds.length) {
-    setTimeout(() => map.fitBounds(bounds, {padding:[40,40], maxZoom:12}), 300);
+  if (withGPS.length > 0) {
+    const bounds = withGPS
+      .filter(p => !isNaN(parseFloat(p['Latitude'])) && !isNaN(parseFloat(p['Longitude'])))
+      .map(p => [parseFloat(p['Latitude']), parseFloat(p['Longitude'])]);
+    if (bounds.length) setTimeout(() => map.fitBounds(bounds, {padding:[50,50], maxZoom:13}), 500);
   }
 }
 
