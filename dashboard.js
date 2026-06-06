@@ -2,9 +2,7 @@
 //  CONFIG
 // ============================================================
 const CONFIG = {
-  CLIENT_ID:    '302226546386-r864vopnd4c0s5d30hbj4hcpvoqij3j3.apps.googleusercontent.com',
-  ALLOWED_EMAIL:'johanmada.jm.jm@gmail.com',
-  API_URL:      'https://script.google.com/macros/s/AKfycbw3viGGD7yGGa6DGsPgQSEuyrrzpRP5IBKWwIUiNeZfSoWixY8qvyhva4uo9r8Vhl7_2Q/exec',
+  API_URL:      'https://script.google.com/macros/s/AKfycbwEzELR_5PR2M9RSfUDJM_bVPi-JjdJpumuYarS2RYgaY3ZCBxlWLKwctNfT3M66ca6/exec',
   DRIVE_FOLDER: '1r0_NgQg7iE9LfZwm3MfuW4fRXg54vBuD',
 };
 
@@ -12,7 +10,6 @@ const CONFIG = {
 //  STATE
 // ============================================================
 let state = {
-  token: null, user: null,
   data: { petani:[], kunjungan:[], produksi:[], tanaman:[], hama:[] },
   driveFiles: [],
   charts: {},
@@ -25,75 +22,6 @@ let state = {
 const PER_PAGE = 25;
 
 // ============================================================
-//  AUTH
-// ============================================================
-function loginWithGoogle() {
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: CONFIG.CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.readonly email profile',
-    callback: async (resp) => {
-      if (resp.error) { alert('Login gagal: ' + resp.error); return; }
-      state.token = resp.access_token;
-      const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
-        { headers: { Authorization: 'Bearer ' + state.token } }).then(r => r.json());
-      if (info.email !== CONFIG.ALLOWED_EMAIL) {
-        alert('Akses ditolak. Hanya admin yang diizinkan.');
-        state.token = null; return;
-      }
-      state.user = info;
-      showApp();
-      await refreshData();
-    }
-  });
-  client.requestAccessToken();
-}
-
-function logout() {
-  if (!confirm('Yakin ingin keluar?')) return;
-  google.accounts.oauth2.revoke(state.token);
-  state.token = null; state.user = null;
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-}
-
-function showApp() {
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('appShell').style.display = 'block';
-  const name = state.user?.name || 'Admin';
-  const pic  = state.user?.picture;
-  document.getElementById('sidebarName').textContent = name.split(' ')[0];
-  const av = document.getElementById('sidebarAvatar');
-  if (pic) av.innerHTML = `<img src="${pic}">`;
-  else av.textContent = name[0].toUpperCase();
-  // Simpan user info ke sessionStorage agar tidak hilang saat navigate
-  sessionStorage.setItem('tm_user', JSON.stringify(state.user));
-}
-
-// Cek session saat halaman dimuat — tampilkan tombol "Lanjutkan" jika ada session
-window.addEventListener('load', () => {
-  const saved = sessionStorage.getItem('tm_user');
-  if (saved) {
-    try {
-      state.user = JSON.parse(saved);
-      // Tampilkan tombol "Lanjutkan sebagai Johan" di login page
-      showResumeBtn();
-    } catch(e) { sessionStorage.removeItem('tm_user'); }
-  }
-});
-
-function showResumeBtn() {
-  const name = state.user?.name?.split(' ')[0] || 'Admin';
-  const loginCard = document.querySelector('.login-card');
-  if (!loginCard) return;
-  const resumeBtn = document.createElement('button');
-  resumeBtn.className = 'google-btn';
-  resumeBtn.style.cssText = 'background:var(--g2);color:white;margin-top:10px;';
-  resumeBtn.innerHTML = `<i class="fas fa-user-circle" style="font-size:18px"></i> Lanjutkan sebagai ${name}`;
-  resumeBtn.onclick = loginWithGoogle;
-  loginCard.appendChild(resumeBtn);
-}
-
-// ============================================================
 //  DATA
 // ============================================================
 async function refreshData() {
@@ -101,7 +29,7 @@ async function refreshData() {
   btn.classList.add('loading');
   showLoading('Memuat data dari Google Sheets...');
   try {
-    const res  = await fetch(`${CONFIG.API_URL}?action=all&token=${state.token}`);
+    const res  = await fetch(`${CONFIG.API_URL}?action=all`);
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message || 'Gagal memuat data');
     state.data = json.data;
@@ -128,15 +56,9 @@ async function refreshData() {
 }
 
 async function loadDriveFiles() {
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q='${CONFIG.DRIVE_FOLDER}'+in+parents+and+mimeType+contains+'image/'` +
-      `&fields=files(id,name,thumbnailLink,webViewLink,createdTime)&pageSize=500&orderBy=createdTime+desc`,
-      { headers: { Authorization: 'Bearer ' + state.token } }
-    );
-    const json = await res.json();
-    state.driveFiles = json.files || [];
-  } catch(e) { state.driveFiles = []; }
+  // Drive API butuh OAuth — dinonaktifkan sementara
+  // Galeri akan diaktifkan kembali setelah sistem auth dipasang
+  state.driveFiles = [];
 }
 
 function renderAll() {
@@ -326,9 +248,9 @@ function renderOverviewMap() {
   const map = state.maps.overview;
   const withGPS = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   document.getElementById('mapCount').textContent = `${withGPS.length} titik GPS dari ${state.data.petani.length} petani`;
-  addMarkersToMap(map, withGPS);
-  // Selalu mulai dari Indonesia, baru animasi ke titik jika ada
+  // Selalu reset ke Indonesia dulu
   map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+  addMarkersToMap(map, withGPS);
   if (withGPS.length > 0) {
     const bounds = withGPS
       .filter(p => !isNaN(parseFloat(p['Latitude'])) && !isNaN(parseFloat(p['Longitude'])))
@@ -347,9 +269,9 @@ function renderPetaPage() {
   let list = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   if (fKom)  list = list.filter(p=>p['Komoditas']===fKom);
   if (fDesa) list = list.filter(p=>p['Desa']===fDesa);
-  addMarkersToMap(map, list);
-  // Default Indonesia, zoom ke data hanya jika ada
+  // Reset ke Indonesia dulu
   map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+  addMarkersToMap(map, list);
   if (list.length > 0) {
     const bounds = list
       .filter(p=>!isNaN(parseFloat(p['Latitude']))&&!isNaN(parseFloat(p['Longitude'])))
@@ -615,3 +537,8 @@ function showLoading(msg='Memuat...') {
   document.getElementById('loadingOverlay').classList.add('show');
 }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+// Auto load data saat halaman dibuka
+document.addEventListener('DOMContentLoaded', () => {
+  refreshData();
+});
