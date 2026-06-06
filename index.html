@@ -138,11 +138,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th{padding:9px 12px;text-align:left;background:var(--s1);color:rgba(255,255,255,.8);
   font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
   white-space:nowrap;font-family:var(--font-body);position:sticky;top:0;}
-.th-search{padding:6px 12px;background:var(--s2);border-bottom:1px solid rgba(255,255,255,.08);}
-.th-search input{width:100%;padding:5px 8px;border:1px solid rgba(255,255,255,.15);
-  border-radius:6px;background:rgba(255,255,255,.08);color:white;font-size:11px;
-  font-family:var(--font-body);outline:none;}
-.th-search input::placeholder{color:rgba(255,255,255,.35);}
+.th-search{padding:5px 8px;background:var(--s2);border-bottom:1px solid rgba(255,255,255,.06);}
+td.th-search{background:var(--s2);padding:5px 8px;}
+.th-search input{width:100%;padding:5px 8px;border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;background:rgba(255,255,255,.07);color:white;font-size:11px;
+  font-family:var(--font-body);outline:none;box-sizing:border-box;}
+.th-search input::placeholder{color:rgba(255,255,255,.3);}
 .th-search input:focus{border-color:var(--g4);background:rgba(255,255,255,.12);}
 td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--s2);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
@@ -239,6 +240,7 @@ tr:hover td{background:#f8fafc;}
       <button class="nav-item" onclick="showPage('kunjungan')"><i class="fas fa-clipboard-list"></i> Kunjungan</button>
       <button class="nav-item" onclick="showPage('produksi')"><i class="fas fa-box"></i> Produksi</button>
       <button class="nav-item" onclick="showPage('tanaman')"><i class="fas fa-seedling"></i> Tanaman</button>
+      <button class="nav-item" onclick="showPage('hama')"><i class="fas fa-bug"></i> Hama & Penyakit</button>
       <button class="nav-item" onclick="showPage('galeri')"><i class="fas fa-images"></i> Galeri Foto</button>
     </nav>
     <div class="sidebar-bottom">
@@ -458,6 +460,42 @@ tr:hover td{background:#f8fafc;}
             </table>
           </div>
           <div class="pagination" id="tanamanPagination"></div>
+        </div>
+      </div>
+
+      <!-- HAMA -->
+      <div class="page" id="page-hama">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-bug" style="color:var(--red);margin-right:6px"></i>Hama & Penyakit</h3>
+            <span id="hamaCount" style="font-size:12px;color:var(--s4)"></span>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px">#</th>
+                  <th>Petani</th><th>Desa</th><th>Tgl Kunjungan</th>
+                  <th>Petugas</th><th>Tanaman</th><th>Nama Hama/Penyakit</th>
+                  <th>Tingkat</th><th>Status</th><th>Solusi</th>
+                </tr>
+                <tr class="th-search">
+                  <td></td>
+                  <td class="th-search"><input placeholder="Cari petani..." oninput="colFilter('hama','Nama Petani',this.value)"></td>
+                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('hama','Desa',this.value)"></td>
+                  <td class="th-search"></td>
+                  <td class="th-search"><input placeholder="Petugas..." oninput="colFilter('hama','Petugas',this.value)"></td>
+                  <td class="th-search"><input placeholder="Tanaman..." oninput="colFilter('hama','Nama Tanaman',this.value)"></td>
+                  <td class="th-search"><input placeholder="Nama hama..." oninput="colFilter('hama','Nama Hama/Penyakit',this.value)"></td>
+                  <td class="th-search"><input placeholder="Tingkat..." oninput="colFilter('hama','Tingkat Serangan',this.value)"></td>
+                  <td class="th-search"><input placeholder="Status..." oninput="colFilter('hama','Status',this.value)"></td>
+                  <td class="th-search"></td>
+                </tr>
+              </thead>
+              <tbody id="hamaTable"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="hamaPagination"></div>
         </div>
       </div>
 
