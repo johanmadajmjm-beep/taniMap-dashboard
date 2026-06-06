@@ -115,7 +115,11 @@ canvas{display:block;width:100%!important;}
   background:linear-gradient(135deg,rgba(255,255,255,1),rgba(248,250,252,.8));}
 .card-header h3{font-family:var(--font-head);font-size:15px;font-weight:800;
   letter-spacing:-.2px;color:var(--s1);}
-.card-body{padding:0;overflow-x:auto;}
+.card-body{padding:0;overflow:auto;max-height:100%;}
+.card-body table thead th{position:sticky;top:0;z-index:10;}
+.card-body table tr.sticky-bottom td{position:sticky;bottom:0;
+  background:var(--g5);font-weight:700;z-index:9;
+  border-top:2px solid var(--g3);}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th{padding:10px 14px;text-align:left;
   background:linear-gradient(135deg,#060d1f,#0f1f3d);
@@ -224,7 +228,7 @@ tr:hover td{background:rgba(5,150,105,.04);}
           <div class="stat-card" style="--accent:var(--g3)"><div class="stat-val" id="st-petani">—</div><div class="stat-lbl">Total Petani</div><i class="fas fa-users stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--blue)"><div class="stat-val" id="st-kunjungan">—</div><div class="stat-lbl">Total Kunjungan</div><i class="fas fa-clipboard stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--amber)"><div class="stat-val" id="st-produksi">—</div><div class="stat-lbl">Produksi (Rp / Ha)</div><i class="fas fa-box stat-icon"></i></div>
-          <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Total Tanaman</div><i class="fas fa-seedling stat-icon"></i></div>
+          <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Tanaman / Luas (Ha)</div><i class="fas fa-seedling stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--red)"><div class="stat-val" id="st-hama">—</div><div class="stat-lbl">Laporan Hama</div><i class="fas fa-bug stat-icon"></i></div>
         </div>
         <div class="chart-grid" style="grid-template-columns:1fr 1fr">
