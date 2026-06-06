@@ -338,15 +338,24 @@ function renderOverviewMap() {
 }
 
 function renderPetaPage() {
-  if (!state.maps.peta) state.maps.peta = initMap('petaMap');
+  if (!state.maps.peta) {
+    state.maps.peta = initMap('petaMap');
+  }
   const map = state.maps.peta;
   const fKom  = document.getElementById('petaFilterKomoditas')?.value||'';
   const fDesa = document.getElementById('petaFilterDesa')?.value||'';
   let list = state.data.petani.filter(p=>p['Latitude']&&p['Longitude']);
   if (fKom)  list = list.filter(p=>p['Komoditas']===fKom);
   if (fDesa) list = list.filter(p=>p['Desa']===fDesa);
-  const bounds = addMarkersToMap(map, list);
-  if (bounds.length) map.fitBounds(bounds,{padding:[40,40],maxZoom:14});
+  addMarkersToMap(map, list);
+  // Default Indonesia, zoom ke data hanya jika ada
+  map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+  if (list.length > 0) {
+    const bounds = list
+      .filter(p=>!isNaN(parseFloat(p['Latitude']))&&!isNaN(parseFloat(p['Longitude'])))
+      .map(p=>[parseFloat(p['Latitude']),parseFloat(p['Longitude'])]);
+    if (bounds.length) setTimeout(()=>map.fitBounds(bounds,{padding:[50,50],maxZoom:13}),300);
+  }
   setTimeout(()=>map.invalidateSize(),150);
 }
 
