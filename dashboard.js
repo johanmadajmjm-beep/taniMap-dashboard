@@ -112,7 +112,8 @@ function renderStats() {
     ? (totalPenjualan/1e6).toFixed(1) + 'jt'
     : totalPenjualan.toLocaleString('id-ID');
   document.getElementById('st-produksi').textContent = penjualanStr + ' / ' + totalLahanProd.toFixed(1) + 'Ha';
-  document.getElementById('st-tanaman').textContent   = d.tanaman.length;
+  const totalLahanTanaman = d.tanaman.reduce((s,t)=>s+(parseFloat(t['Luas Tanam (Ha)'])||0),0);
+  document.getElementById('st-tanaman').textContent = d.tanaman.length + ' / ' + totalLahanTanaman.toFixed(1) + 'Ha';
   document.getElementById('st-hama').textContent      = (d.hama||[]).length;
 }
 
@@ -608,7 +609,7 @@ function renderProduksiSummary() {
   const totalLuas   = Object.values(map).reduce((s,d)=>s+d.luas,0);
   const totalRp     = Object.values(map).reduce((s,d)=>s+d.total,0);
   tbody.innerHTML += `
-    <tr style="background:var(--g5);font-weight:700">
+    <tr class="sticky-bottom">
       <td></td>
       <td style="color:var(--g2)">TOTAL</td>
       <td style="text-align:center;color:var(--g2)">${totalPetani}</td>
@@ -658,7 +659,7 @@ function renderTanamanSummary() {
   const totalPetani = new Set(state.data.tanaman.map(t=>t['Nama Petani'])).size;
   const totalLuas   = Object.values(map).reduce((s,d)=>s+d.luas,0);
   tbody.innerHTML += `
-    <tr style="background:var(--g5);font-weight:700">
+    <tr class="sticky-bottom">
       <td></td>
       <td style="color:var(--g2)">TOTAL</td>
       <td style="text-align:center;color:var(--g2)">${totalPetani}</td>
