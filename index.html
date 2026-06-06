@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>TaniMap Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -196,6 +196,101 @@ tr:hover td{background:rgba(5,150,105,.04);}
 .split-card .card-header{flex-shrink:0;}
 .split-card .card-body{flex:1;overflow:auto;min-height:0;}
 .split-card .pagination{flex-shrink:0;}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+  /* Sidebar jadi bottom nav di mobile */
+  .sidebar {
+    position: fixed;
+    left: 0; right: 0;
+    top: auto; bottom: 0;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    z-index: 200;
+    border-right: none;
+    border-top: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo { display: none; }
+  .nav-items {
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-item {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 6px;
+    margin: 0;
+    border-radius: 0;
+    min-width: 64px;
+    font-size: 9px;
+    width: auto;
+    border: none;
+    justify-content: center;
+  }
+  .nav-item i { font-size: 16px; width: auto; }
+  .nav-item.active { background: rgba(5,150,105,.25); border-radius: 8px; }
+  .sidebar > div:last-child { display: none; } /* sembunyikan tombol keluar */
+
+  /* Main konten full width */
+  .main { margin-left: 0; padding-bottom: 70px; }
+
+  /* Topbar */
+  .topbar { padding: 10px 14px; }
+  .topbar-title { font-size: 16px; }
+  .last-update { display: none; }
+  .refresh-btn { padding: 7px 12px; font-size: 12px; }
+
+  /* Content */
+  .content { padding: 14px; }
+
+  /* Stats grid — 2 kolom di mobile */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-val { font-size: 22px; }
+
+  /* Chart grid — 1 kolom */
+  .chart-grid { grid-template-columns: 1fr; }
+  .chart-grid-wide { grid-template-columns: 1fr; }
+
+  /* Card header wrap */
+  .card-header { flex-wrap: wrap; gap: 8px; }
+  .card-header h3 { font-size: 13px; }
+
+  /* Search inputs lebih kecil */
+  .search-col { min-width: 80px; max-width: 110px; font-size: 11px; padding: 5px 8px; }
+
+  /* Split page — stack vertikal di mobile */
+  .split-page { grid-template-rows: auto auto; height: auto; }
+  .full-page-card { height: auto; }
+  .full-page-card .card-body { max-height: 50vh; overflow: auto; }
+  .split-card .card-body { max-height: 35vh; overflow: auto; }
+
+  /* Peta */
+  #dashMap { height: 280px; }
+  #petaMap { height: 350px; }
+  #petaInfoBox { grid-template-columns: repeat(2,1fr); }
+
+  /* Table font kecil */
+  table { font-size: 11px; }
+  th { font-size: 9px; padding: 7px 8px; }
+  td { padding: 8px; }
+
+  /* Gallery */
+  .gallery-grid { grid-template-columns: repeat(2,1fr); gap: 8px; padding: 10px; }
+
+  /* Login page */
+  .login-card { width: 90vw; padding: 36px 24px; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .nav-item { min-width: 52px; font-size: 8px; padding: 6px 4px; }
+}
 </style>
 </head>
 <body>
