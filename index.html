@@ -202,7 +202,107 @@ tr:hover td{background:rgba(5,150,105,.04);}
 
 <div id="loadingBar"></div>
 
-<div id="appShell" style="display:block">
+<!-- LOGIN PAGE -->
+<div id="loginPage" style="display:flex;min-height:100vh;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#022c22 0%,#064e3b 50%,#060d1f 100%);
+  position:relative;overflow:hidden;">
+  <div style="position:absolute;width:600px;height:600px;border-radius:50%;
+    background:radial-gradient(circle,rgba(5,150,105,.15),transparent);
+    top:-100px;right:-100px;pointer-events:none"></div>
+  <div style="position:absolute;width:400px;height:400px;border-radius:50%;
+    background:radial-gradient(circle,rgba(37,99,235,.1),transparent);
+    bottom:-80px;left:-80px;pointer-events:none"></div>
+
+  <div style="background:rgba(255,255,255,.06);backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.1);border-radius:24px;
+    padding:52px 44px;width:420px;text-align:center;
+    box-shadow:0 32px 80px rgba(0,0,0,.5);position:relative;z-index:1">
+
+    <div style="font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;
+      color:white;letter-spacing:-1.5px;margin-bottom:4px">
+      Tani<span style="background:linear-gradient(135deg,#34d399,#059669);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent">Map</span>
+    </div>
+    <div style="color:rgba(255,255,255,.4);font-size:12px;font-weight:600;
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:40px">
+      Admin Dashboard
+    </div>
+
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
+        text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Username</label>
+      <input id="loginUser" type="text" placeholder="Masukkan username"
+        style="width:100%;padding:13px 16px;background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);border-radius:12px;color:white;
+        font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;
+        transition:border .2s"
+        onfocus="this.style.borderColor='rgba(52,211,153,.5)'"
+        onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+
+    <div style="text-align:left;margin-bottom:28px">
+      <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
+        text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Password</label>
+      <div style="position:relative">
+        <input id="loginPass" type="password" placeholder="Masukkan password"
+          style="width:100%;padding:13px 16px;background:rgba(255,255,255,.08);
+          border:1px solid rgba(255,255,255,.12);border-radius:12px;color:white;
+          font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;
+          transition:border .2s"
+          onfocus="this.style.borderColor='rgba(52,211,153,.5)'"
+          onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="togglePass()" style="position:absolute;right:14px;top:50%;
+          transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);
+          cursor:pointer;font-size:14px"><i class="fas fa-eye" id="passEyeIcon"></i></button>
+      </div>
+    </div>
+
+    <div id="loginError" style="display:none;background:rgba(220,38,38,.15);
+      border:1px solid rgba(220,38,38,.3);border-radius:10px;padding:10px 14px;
+      color:#fca5a5;font-size:13px;margin-bottom:16px;text-align:left">
+      <i class="fas fa-exclamation-circle"></i> Username atau password salah
+    </div>
+
+    <button onclick="doLogin()" style="width:100%;padding:14px;
+      background:linear-gradient(135deg,#065f46,#059669);color:white;border:none;
+      border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;
+      font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;
+      box-shadow:0 4px 16px rgba(5,150,105,.4);"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(5,150,105,.5)'"
+      onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(5,150,105,.4)'">
+      <i class="fas fa-sign-in-alt"></i> Masuk
+    </button>
+
+    <div style="color:rgba(255,255,255,.2);font-size:11px;margin-top:24px">
+      TaniMap — Sistem Informasi Manajemen Petani
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);text-align:left">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);
+        text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Hubungi Admin</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5);font-size:12px">
+          <i class="fas fa-user" style="width:14px;color:var(--g4)"></i> johanmada
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5);font-size:12px">
+          <i class="fas fa-phone" style="width:14px;color:var(--g4)"></i>
+          <a href="tel:085333068814" style="color:rgba(255,255,255,.5);text-decoration:none"
+            onmouseover="this.style.color='var(--g4)'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+            085333068814</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5);font-size:12px">
+          <i class="fas fa-envelope" style="width:14px;color:var(--g4)"></i>
+          <a href="mailto:johanmada.jm.jm@gmail.com" style="color:rgba(255,255,255,.5);text-decoration:none"
+            onmouseover="this.style.color='var(--g4)'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+            johanmada.jm.jm@gmail.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="appShell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-text">Tani<span>Map</span></div>
@@ -218,6 +318,17 @@ tr:hover td{background:rgba(5,150,105,.04);}
       <button class="nav-item" onclick="showPage('hama')"><i class="fas fa-bug"></i> Hama & Penyakit</button>
       <button class="nav-item" onclick="showPage('galeri')"><i class="fas fa-images"></i> Galeri Foto</button>
     </nav>
+    <div style="padding:14px;border-top:1px solid rgba(255,255,255,.06)">
+      <button onclick="doLogout()" style="width:100%;padding:9px;
+        background:rgba(220,38,38,.1);color:#fca5a5;
+        border:1px solid rgba(220,38,38,.2);border-radius:10px;font-size:12px;
+        font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+        transition:all .15s;"
+        onmouseover="this.style.background='rgba(220,38,38,.2)'"
+        onmouseout="this.style.background='rgba(220,38,38,.1)'">
+        <i class="fas fa-sign-out-alt"></i> Keluar
+      </button>
+    </div>
   </aside>
 
   <main class="main">
@@ -454,6 +565,8 @@ tr:hover td{background:rgba(5,150,105,.04);}
     </div>
   </main>
 </div>
+
+</div><!-- end appShell -->
 
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
