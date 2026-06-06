@@ -95,7 +95,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-heigh
 .chart-card{background:var(--card);border-radius:var(--r);border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow);padding:20px;transition:box-shadow .2s;}.chart-card:hover{box-shadow:var(--shadow-lg);}
 .chart-card h4{font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--s1);margin-bottom:4px;letter-spacing:-.2px;}
 .chart-card .chart-sub{font-size:11px;color:var(--s5);margin-bottom:12px;}
-canvas{max-height:200px;}
+canvas{display:block;width:100%!important;}
+.chart-card{position:relative;}
+.chart-container{position:relative;width:100%;height:200px;}
+.chart-container-tall{position:relative;width:100%;height:240px;}
 
 /* MAP */
 .map-wrap{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
@@ -171,6 +174,14 @@ tr:hover td{background:rgba(5,150,105,.04);}
 /* FILTER */
 .filter-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font-body);background:var(--card);color:var(--s2);outline:none;}
 .filter-select:focus{border-color:var(--g3);}
+
+/* SPLIT LAYOUT */
+.split-page{display:grid;grid-template-rows:1fr 1fr;gap:14px;height:calc(100vh - 120px);}
+.split-card{display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.split-card .card{height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.split-card .card-header{flex-shrink:0;}
+.split-card .card-body{flex:1;overflow:auto;min-height:0;}
+.split-card .pagination{flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -212,18 +223,18 @@ tr:hover td{background:rgba(5,150,105,.04);}
         <div class="stats-grid">
           <div class="stat-card" style="--accent:var(--g3)"><div class="stat-val" id="st-petani">—</div><div class="stat-lbl">Total Petani</div><i class="fas fa-users stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--blue)"><div class="stat-val" id="st-kunjungan">—</div><div class="stat-lbl">Total Kunjungan</div><i class="fas fa-clipboard stat-icon"></i></div>
-          <div class="stat-card" style="--accent:var(--amber)"><div class="stat-val" id="st-produksi">—</div><div class="stat-lbl">Hasil Penjualan</div><i class="fas fa-box stat-icon"></i></div>
+          <div class="stat-card" style="--accent:var(--amber)"><div class="stat-val" id="st-produksi">—</div><div class="stat-lbl">Produksi (Rp / Ha)</div><i class="fas fa-box stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Total Tanaman</div><i class="fas fa-seedling stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--red)"><div class="stat-val" id="st-hama">—</div><div class="stat-lbl">Laporan Hama</div><i class="fas fa-bug stat-icon"></i></div>
         </div>
         <div class="chart-grid" style="grid-template-columns:1fr 1fr">
-          <div class="chart-card"><h4>Distribusi Komoditas</h4><p class="chart-sub">Jumlah petani per komoditas</p><canvas id="chartKomoditas"></canvas></div>
-          <div class="chart-card"><h4>Status Tanaman</h4><p class="chart-sub">Kondisi tanaman terkini</p><canvas id="chartTanaman"></canvas></div>
+          <div class="chart-card"><h4>Distribusi Komoditas</h4><p class="chart-sub">Jumlah petani per komoditas</p><div class="chart-container"><canvas id="chartKomoditas"></canvas></div></div>
+          <div class="chart-card"><h4>Status Tanaman</h4><p class="chart-sub">Kondisi tanaman terkini</p><div class="chart-container"><canvas id="chartTanaman"></canvas></div></div>
 
         </div>
         <div class="chart-grid-wide" style="grid-template-columns:1fr;">
-          <div class="chart-card"><h4>Petani per Desa</h4><p class="chart-sub">Top 10 desa</p><canvas id="chartDesa" style="max-height:240px"></canvas></div>
-          <div class="chart-card"><h4>Produksi per Komoditas</h4><p class="chart-sub">Akumulasi nilai (Rp)</p><canvas id="chartProduksi" style="max-height:240px"></canvas></div>
+          <div class="chart-card"><h4>Petani per Desa</h4><p class="chart-sub">Top 10 desa</p><div class="chart-container-tall"><canvas id="chartDesa"></canvas></div></div>
+          <div class="chart-card"><h4>Produksi per Komoditas</h4><p class="chart-sub">Akumulasi nilai (Rp)</p><div class="chart-container-tall"><canvas id="chartProduksi"></canvas></div></div>
         </div>
 
       </div>
@@ -288,9 +299,10 @@ tr:hover td{background:rgba(5,150,105,.04);}
 
       <!-- PRODUKSI -->
       <div class="page" id="page-produksi">
+        <div class="split-page">
 
         <!-- Tabel Rangkuman per Komoditas -->
-        <div class="card" style="margin-bottom:16px">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-chart-bar" style="color:var(--amber);margin-right:6px"></i>Rangkuman Produksi per Komoditas</h3>
           </div>
@@ -303,10 +315,10 @@ tr:hover td{background:rgba(5,150,105,.04);}
               <tbody id="produksiSummaryTable"></tbody>
             </table>
           </div>
-        </div>
+        </div></div>
 
         <!-- Tabel Detail per Petani -->
-        <div class="card">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-box" style="color:var(--amber);margin-right:6px"></i>Data Produksi</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -322,14 +334,17 @@ tr:hover td{background:rgba(5,150,105,.04);}
             <tbody id="produksiTable"></tbody>
           </table></div>
           <div class="pagination" id="produksiPagination"></div>
-        </div>
+        </div></div>
+
+        </div><!-- end split-page -->
       </div>
 
       <!-- TANAMAN -->
       <div class="page" id="page-tanaman">
+        <div class="split-page">
 
         <!-- Tabel Rangkuman per Jenis Tanaman -->
-        <div class="card" style="margin-bottom:16px">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-chart-bar" style="color:var(--purple);margin-right:6px"></i>Rangkuman per Jenis Tanaman</h3>
           </div>
@@ -342,10 +357,10 @@ tr:hover td{background:rgba(5,150,105,.04);}
               <tbody id="tanamanSummaryTable"></tbody>
             </table>
           </div>
-        </div>
+        </div></div>
 
         <!-- Tabel Detail per Petani -->
-        <div class="card">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-seedling" style="color:var(--purple);margin-right:6px"></i>Data Tanaman</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -360,14 +375,17 @@ tr:hover td{background:rgba(5,150,105,.04);}
             <tbody id="tanamanTable"></tbody>
           </table></div>
           <div class="pagination" id="tanamanPagination"></div>
-        </div>
+        </div></div>
+
+        </div><!-- end split-page -->
       </div>
 
       <!-- HAMA -->
       <div class="page" id="page-hama">
+        <div class="split-page">
 
         <!-- Tabel Rangkuman per Hama/Penyakit -->
-        <div class="card" style="margin-bottom:16px">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-chart-bar" style="color:var(--red);margin-right:6px"></i>Rangkuman Hama & Penyakit</h3>
           </div>
@@ -380,10 +398,10 @@ tr:hover td{background:rgba(5,150,105,.04);}
               <tbody id="hamaSummaryTable"></tbody>
             </table>
           </div>
-        </div>
+        </div></div>
 
         <!-- Tabel Detail -->
-        <div class="card">
+        <div class="split-card"><div class="card">
           <div class="card-header">
             <h3><i class="fas fa-bug" style="color:var(--red);margin-right:6px"></i>Hama & Penyakit</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -398,7 +416,9 @@ tr:hover td{background:rgba(5,150,105,.04);}
             <tbody id="hamaTable"></tbody>
           </table></div>
           <div class="pagination" id="hamaPagination"></div>
-        </div>
+        </div></div>
+
+        </div><!-- end split-page -->
       </div>
 
       <!-- GALERI -->
