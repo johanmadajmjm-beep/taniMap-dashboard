@@ -8,87 +8,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://accounts.google.com/gsi/client" async></script>
 <style>
-:root {
+:root{
   --g1:#052e16;--g2:#065f46;--g3:#059669;--g4:#34d399;--g5:#d1fae5;
   --s1:#0f172a;--s2:#1e293b;--s3:#334155;--s4:#64748b;--s5:#94a3b8;
   --bg:#f1f5f9;--card:#ffffff;--border:#e2e8f0;
   --blue:#2563eb;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--teal:#0891b2;
-  --font-head:'Fraunces',serif;
-  --font-body:'Plus Jakarta Sans',sans-serif;
-  --r:14px;--r-sm:8px;
-  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+  --font-head:'Fraunces',serif;--font-body:'Plus Jakarta Sans',sans-serif;
+  --r:14px;--shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
   --shadow-lg:0 8px 32px rgba(0,0,0,.12);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-height:100vh;}
 
-/* LOGIN */
-#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 50%,#0f172a 100%);
-  position:relative;overflow:hidden;}
-#loginPage::before{content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 70% 30%,rgba(5,150,105,.3) 0%,transparent 60%),
-              radial-gradient(ellipse at 20% 80%,rgba(52,211,153,.15) 0%,transparent 50%);}
-.login-card{position:relative;z-index:1;background:rgba(255,255,255,.08);
-  backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);
-  border-radius:24px;padding:56px 48px;width:420px;text-align:center;
-  box-shadow:0 32px 80px rgba(0,0,0,.4);}
-.login-logo{font-family:var(--font-head);font-size:46px;font-weight:700;
-  color:white;letter-spacing:-1px;margin-bottom:4px;line-height:1;}
-.login-logo span{color:var(--g4);}
-.login-sub{color:rgba(255,255,255,.55);font-size:13px;margin-bottom:40px;font-weight:400;}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;padding:15px 20px;background:white;color:var(--s1);
-  border:none;border-radius:12px;font-family:var(--font-body);font-size:14px;font-weight:600;
-  cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);}
-.login-note{color:rgba(255,255,255,.3);font-size:11px;margin-top:20px;}
-
-/* APP */
-#appShell{display:none;}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;
-  background:var(--s1);display:flex;flex-direction:column;z-index:100;}
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--s1);display:flex;flex-direction:column;z-index:100;}
 .sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
-.sidebar-logo-text{font-family:var(--font-head);font-size:24px;font-weight:700;
-  color:white;letter-spacing:-.5px;line-height:1;}
+.sidebar-logo-text{font-family:var(--font-head);font-size:24px;font-weight:700;color:white;letter-spacing:-.5px;line-height:1;}
 .sidebar-logo-text span{color:var(--g4);}
-.sidebar-logo small{display:block;font-size:10px;font-weight:500;color:var(--s5);
-  font-family:var(--font-body);letter-spacing:.05em;text-transform:uppercase;margin-top:4px;}
+.sidebar-logo small{display:block;font-size:10px;font-weight:500;color:var(--s5);font-family:var(--font-body);letter-spacing:.05em;text-transform:uppercase;margin-top:4px;}
 .nav-items{flex:1;padding:10px 0;overflow-y:auto;}
-.nav-item{display:flex;align-items:center;gap:11px;padding:10px 16px;
-  margin:1px 8px;border-radius:10px;cursor:pointer;color:var(--s5);
-  font-size:13px;font-weight:500;transition:all .15s;border:none;background:none;
-  width:calc(100% - 16px);text-align:left;font-family:var(--font-body);}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 16px;margin:1px 8px;border-radius:10px;cursor:pointer;color:var(--s5);font-size:13px;font-weight:500;transition:all .15s;border:none;background:none;width:calc(100% - 16px);text-align:left;font-family:var(--font-body);}
 .nav-item:hover{background:rgba(255,255,255,.07);color:white;}
 .nav-item.active{background:var(--g2);color:white;}
 .nav-item i{width:15px;text-align:center;font-size:13px;}
-.sidebar-bottom{padding:14px;border-top:1px solid rgba(255,255,255,.08);}
-.user-card{display:flex;align-items:center;gap:10px;padding:10px;
-  border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:8px;}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--g3);
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
-.user-avatar img{width:100%;height:100%;object-fit:cover;}
-.user-name{font-size:12px;font-weight:600;color:white;}
-.user-role{font-size:10px;color:var(--s5);}
-.logout-btn{width:100%;padding:8px;background:rgba(220,38,38,.1);color:#fca5a5;
-  border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:12px;
-  cursor:pointer;transition:all .15s;font-family:var(--font-body);}
-.logout-btn:hover{background:rgba(220,38,38,.2);}
 
 /* MAIN */
 .main{margin-left:232px;min-height:100vh;}
-.topbar{position:sticky;top:0;z-index:50;
-  background:rgba(241,245,249,.92);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);padding:14px 24px;
-  display:flex;align-items:center;justify-content:space-between;}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(241,245,249,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
 .topbar-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--s1);}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-.refresh-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;
-  border-radius:8px;background:var(--g2);color:white;border:none;
-  font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .2s;}
+.refresh-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:var(--g2);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .2s;}
 .refresh-btn:hover{background:var(--g3);}
 .refresh-btn.loading i{animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -101,10 +51,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-heigh
 
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--card);border-radius:var(--r);padding:18px 20px;
-  border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;}
-.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
-  background:var(--accent,var(--g3));}
+.stat-card{background:var(--card);border-radius:var(--r);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--accent,var(--g3));}
 .stat-val{font-family:var(--font-head);font-size:36px;font-weight:700;color:var(--s1);line-height:1;}
 .stat-lbl{font-size:11px;color:var(--s4);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
 .stat-icon{position:absolute;top:14px;right:16px;font-size:24px;opacity:.1;}
@@ -112,44 +60,30 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--s1);min-heigh
 /* CHARTS */
 .chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;}
 .chart-grid-wide{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:20px;}
-.chart-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);
-  box-shadow:var(--shadow);padding:18px;}
-.chart-card h4{font-family:var(--font-head);font-size:14px;font-weight:600;
-  color:var(--s2);margin-bottom:12px;}
-.chart-card .chart-sub{font-size:11px;color:var(--s5);margin-bottom:12px;margin-top:-8px;}
+.chart-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);padding:18px;}
+.chart-card h4{font-family:var(--font-head);font-size:14px;font-weight:600;color:var(--s2);margin-bottom:4px;}
+.chart-card .chart-sub{font-size:11px;color:var(--s5);margin-bottom:12px;}
 canvas{max-height:200px;}
 
 /* MAP */
-.map-wrap{background:var(--card);border-radius:var(--r);border:1px solid var(--border);
-  box-shadow:var(--shadow);overflow:hidden;}
-.map-header{padding:14px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;}
+.map-wrap{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.map-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .map-header h3{font-family:var(--font-head);font-size:15px;font-weight:700;}
 #dashMap{height:380px;}
 
-/* CARD & TABLE */
-.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);
-  box-shadow:var(--shadow);overflow:hidden;}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+/* CARD TABLE */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .card-header h3{font-family:var(--font-head);font-size:15px;font-weight:700;}
 .card-body{padding:0;overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
-th{padding:9px 12px;text-align:left;background:var(--s1);color:rgba(255,255,255,.8);
-  font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
-  white-space:nowrap;font-family:var(--font-body);position:sticky;top:0;}
-.th-search{padding:5px 8px;background:var(--s2);border-bottom:1px solid rgba(255,255,255,.06);}
-td.th-search{background:var(--s2);padding:5px 8px;}
-.th-search input{width:100%;padding:5px 8px;border:1px solid rgba(255,255,255,.12);
-  border-radius:6px;background:rgba(255,255,255,.07);color:white;font-size:11px;
-  font-family:var(--font-body);outline:none;box-sizing:border-box;}
-.th-search input::placeholder{color:rgba(255,255,255,.3);}
-.th-search input:focus{border-color:var(--g4);background:rgba(255,255,255,.12);}
+th{padding:9px 12px;text-align:left;background:var(--s1);color:rgba(255,255,255,.8);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;font-family:var(--font-body);}
 td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--s2);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#f8fafc;}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
-  font-size:11px;font-weight:600;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 .badge-green{background:var(--g5);color:var(--g2);}
 .badge-blue{background:#dbeafe;color:#1d4ed8;}
 .badge-amber{background:#fef3c7;color:#92400e;}
@@ -158,76 +92,50 @@ tr:hover td{background:#f8fafc;}
 .badge-teal{background:#cffafe;color:#0e7490;}
 .badge-gray{background:#f1f5f9;color:#475569;}
 
+/* SEARCH */
+.search-col{padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font-body);color:var(--s1);background:var(--bg);outline:none;min-width:110px;max-width:150px;}
+.search-col:focus{border-color:var(--g3);background:white;}
+
 /* GALLERY */
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:14px;}
-.gallery-item{border-radius:10px;overflow:hidden;background:var(--bg);
-  border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.gallery-item{border-radius:10px;overflow:hidden;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
 .gallery-item:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
 .gallery-item img{width:100%;height:130px;object-fit:cover;display:block;}
 .gallery-item-info{padding:8px 10px;}
 .gallery-item-name{font-size:11px;font-weight:600;color:var(--s2);}
-.gallery-item-type{font-size:10px;color:var(--s5);text-transform:uppercase;margin-top:2px;}
 
 /* LIGHTBOX */
-#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);
-  z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
 #lightbox.open{display:flex;}
 #lightboxImg{max-width:88vw;max-height:82vh;border-radius:8px;object-fit:contain;}
-#lightboxClose{position:absolute;top:18px;right:22px;color:white;font-size:26px;
-  cursor:pointer;background:rgba(255,255,255,.1);border:none;width:40px;height:40px;
-  border-radius:50%;display:flex;align-items:center;justify-content:center;}
-#lightboxCaption{color:rgba(255,255,255,.7);font-size:13px;background:rgba(0,0,0,.4);
-  padding:6px 18px;border-radius:20px;}
+#lightboxClose{position:absolute;top:18px;right:22px;color:white;font-size:26px;cursor:pointer;background:rgba(255,255,255,.1);border:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+#lightboxCaption{color:rgba(255,255,255,.7);font-size:13px;background:rgba(0,0,0,.4);padding:6px 18px;border-radius:20px;}
+
+/* LOADING */
+#loadingBar{position:fixed;top:0;left:0;height:3px;background:var(--g3);width:0;z-index:9999;transition:width .3s;}
 
 /* EMPTY */
 .empty{text-align:center;padding:48px 20px;color:var(--s5);}
 .empty i{font-size:36px;margin-bottom:10px;display:block;}
 .empty p{font-size:13px;}
 
-/* LOADING */
-.loading-overlay{position:fixed;inset:0;background:rgba(241,245,249,.88);
-  display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:12px;}
-.loading-overlay.show{display:flex;}
-.spinner{width:38px;height:38px;border:3px solid var(--border);
-  border-top-color:var(--g3);border-radius:50%;animation:spin .8s linear infinite;}
-.loading-overlay p{font-size:14px;color:var(--s4);}
-
 /* PAGINATION */
-.pagination{display:flex;align-items:center;gap:5px;padding:10px 14px;
-  border-top:1px solid var(--border);flex-wrap:wrap;}
-.page-btn{padding:5px 10px;border:1px solid var(--border);border-radius:6px;
-  background:var(--card);color:var(--s3);font-size:12px;cursor:pointer;
-  font-family:var(--font-body);transition:all .15s;}
+.pagination{display:flex;align-items:center;gap:5px;padding:10px 14px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.page-btn{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--s3);font-size:12px;cursor:pointer;font-family:var(--font-body);transition:all .15s;}
 .page-btn:hover{background:var(--g5);color:var(--g2);border-color:var(--g3);}
 .page-btn.active{background:var(--g2);color:white;border-color:var(--g2);}
 .page-info{font-size:11px;color:var(--s5);margin-left:auto;}
 
-/* FILTER SELECTS */
-.filter-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;
-  font-size:12px;font-family:var(--font-body);background:var(--card);color:var(--s2);outline:none;}
+/* FILTER */
+.filter-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font-body);background:var(--card);color:var(--s2);outline:none;}
 .filter-select:focus{border-color:var(--g3);}
 </style>
 </head>
 <body>
 
-<div id="loginPage">
-  <div class="login-card">
-    <div class="login-logo">Tani<span>Map</span></div>
-    <p class="login-sub">Admin Dashboard — Sistem Informasi Petani</p>
-    <button class="google-btn" onclick="loginWithGoogle()">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Masuk dengan Google
-    </button>
-    <p class="login-note">Hanya akun admin yang diizinkan masuk</p>
-  </div>
-</div>
+<div id="loadingBar"></div>
 
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <p id="loadingMsg">Memuat data...</p>
-</div>
-
-<div id="appShell">
+<div id="appShell" style="display:block">
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-text">Tani<span>Map</span></div>
@@ -243,13 +151,6 @@ tr:hover td{background:#f8fafc;}
       <button class="nav-item" onclick="showPage('hama')"><i class="fas fa-bug"></i> Hama & Penyakit</button>
       <button class="nav-item" onclick="showPage('galeri')"><i class="fas fa-images"></i> Galeri Foto</button>
     </nav>
-    <div class="sidebar-bottom">
-      <div class="user-card">
-        <div class="user-avatar" id="sidebarAvatar">A</div>
-        <div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Administrator</div></div>
-      </div>
-      <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
-    </div>
   </aside>
 
   <main class="main">
@@ -273,41 +174,15 @@ tr:hover td{background:#f8fafc;}
           <div class="stat-card" style="--accent:var(--purple)"><div class="stat-val" id="st-tanaman">—</div><div class="stat-lbl">Total Tanaman</div><i class="fas fa-seedling stat-icon"></i></div>
           <div class="stat-card" style="--accent:var(--red)"><div class="stat-val" id="st-hama">—</div><div class="stat-lbl">Laporan Hama</div><i class="fas fa-bug stat-icon"></i></div>
         </div>
-
-        <!-- Row 1: 3 chart kecil -->
         <div class="chart-grid">
-          <div class="chart-card">
-            <h4>Distribusi Komoditas</h4>
-            <p class="chart-sub">Jumlah petani per komoditas</p>
-            <canvas id="chartKomoditas"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4>Status Tanaman</h4>
-            <p class="chart-sub">Kondisi tanaman terkini</p>
-            <canvas id="chartTanaman"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4>Kunjungan per Kondisi</h4>
-            <p class="chart-sub">Kondisi temuan lapangan</p>
-            <canvas id="chartKondisi"></canvas>
-          </div>
+          <div class="chart-card"><h4>Distribusi Komoditas</h4><p class="chart-sub">Jumlah petani per komoditas</p><canvas id="chartKomoditas"></canvas></div>
+          <div class="chart-card"><h4>Status Tanaman</h4><p class="chart-sub">Kondisi tanaman terkini</p><canvas id="chartTanaman"></canvas></div>
+          <div class="chart-card"><h4>Kondisi Kunjungan</h4><p class="chart-sub">Temuan kondisi lapangan</p><canvas id="chartKondisi"></canvas></div>
         </div>
-
-        <!-- Row 2: Bar desa (wide) + produksi per musim -->
         <div class="chart-grid-wide">
-          <div class="chart-card">
-            <h4>Petani per Desa</h4>
-            <p class="chart-sub">Top 10 desa berdasarkan jumlah petani</p>
-            <canvas id="chartDesa" style="max-height:240px"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4>Total Produksi per Komoditas</h4>
-            <p class="chart-sub">Akumulasi nilai produksi (Rp)</p>
-            <canvas id="chartProduksi" style="max-height:240px"></canvas>
-          </div>
+          <div class="chart-card"><h4>Petani per Desa</h4><p class="chart-sub">Top 10 desa</p><canvas id="chartDesa" style="max-height:240px"></canvas></div>
+          <div class="chart-card"><h4>Produksi per Komoditas</h4><p class="chart-sub">Akumulasi nilai (Rp)</p><canvas id="chartProduksi" style="max-height:240px"></canvas></div>
         </div>
-
-        <!-- Peta mini -->
         <div class="map-wrap">
           <div class="map-header">
             <h3><i class="fas fa-map-marked-alt" style="color:var(--g3);margin-right:6px"></i>Sebaran Lokasi Petani</h3>
@@ -323,12 +198,8 @@ tr:hover td{background:#f8fafc;}
           <div class="map-header">
             <h3>Peta Sebaran Petani</h3>
             <div style="display:flex;gap:8px">
-              <select class="filter-select" id="petaFilterKomoditas" onchange="renderPetaPage()">
-                <option value="">Semua Komoditas</option>
-              </select>
-              <select class="filter-select" id="petaFilterDesa" onchange="renderPetaPage()">
-                <option value="">Semua Desa</option>
-              </select>
+              <select class="filter-select" id="petaFilterKomoditas" onchange="renderPetaPage()"><option value="">Semua Komoditas</option></select>
+              <select class="filter-select" id="petaFilterDesa" onchange="renderPetaPage()"><option value="">Semua Desa</option></select>
             </div>
           </div>
           <div id="petaMap" style="height:620px"></div>
@@ -340,28 +211,18 @@ tr:hover td{background:#f8fafc;}
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-users" style="color:var(--g3);margin-right:6px"></i>Data Petani</h3>
-            <span id="petaniCount" style="font-size:12px;color:var(--s4)"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="search-col" placeholder="🔍 Nama" oninput="colFilter('petani','Nama',this.value)">
+              <input class="search-col" placeholder="🔍 Desa" oninput="colFilter('petani','Desa',this.value)">
+              <input class="search-col" placeholder="🔍 Kecamatan" oninput="colFilter('petani','Kecamatan',this.value)">
+              <input class="search-col" placeholder="🔍 Komoditas" oninput="colFilter('petani','Komoditas',this.value)">
+              <span id="petaniCount" style="font-size:12px;color:var(--s4)"></span>
+            </div>
           </div>
-          <div class="card-body">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Nama</th><th>Desa</th><th>Kecamatan</th>
-                  <th>Komoditas</th><th>Lahan (Ha)</th><th>HP</th><th>Tgl Input</th>
-                </tr>
-                <tr>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Cari nama..." oninput="colFilter('petani','Nama',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('petani','Desa',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari kecamatan..." oninput="colFilter('petani','Kecamatan',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari komoditas..." oninput="colFilter('petani','Komoditas',this.value)"></td>
-                  <td class="th-search"></td><td class="th-search"></td><td class="th-search"></td>
-                </tr>
-              </thead>
-              <tbody id="petaniTable"></tbody>
-            </table>
-          </div>
+          <div class="card-body"><table>
+            <thead><tr><th>#</th><th>Nama</th><th>Desa</th><th>Kecamatan</th><th>Komoditas</th><th>Lahan (Ha)</th><th>HP</th><th>Tgl Input</th></tr></thead>
+            <tbody id="petaniTable"></tbody>
+          </table></div>
           <div class="pagination" id="petaniPagination"></div>
         </div>
       </div>
@@ -371,29 +232,18 @@ tr:hover td{background:#f8fafc;}
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-clipboard-list" style="color:var(--blue);margin-right:6px"></i>Data Kunjungan</h3>
-            <span id="kunjunganCount" style="font-size:12px;color:var(--s4)"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="search-col" placeholder="🔍 Petani" oninput="colFilter('kunjungan','Nama Petani',this.value)">
+              <input class="search-col" placeholder="🔍 Desa" oninput="colFilter('kunjungan','Desa',this.value)">
+              <input class="search-col" placeholder="🔍 Petugas" oninput="colFilter('kunjungan','Petugas',this.value)">
+              <input class="search-col" placeholder="🔍 Kondisi" oninput="colFilter('kunjungan','Kondisi',this.value)">
+              <span id="kunjunganCount" style="font-size:12px;color:var(--s4)"></span>
+            </div>
           </div>
-          <div class="card-body">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Petani</th><th>Desa</th><th>Tanggal</th>
-                  <th>Petugas</th><th>Kondisi</th><th>Masalah</th><th>Rekomendasi</th>
-                </tr>
-                <tr>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Cari petani..." oninput="colFilter('kunjungan','Nama Petani',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('kunjungan','Desa',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari tanggal..." oninput="colFilter('kunjungan','Tanggal',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari petugas..." oninput="colFilter('kunjungan','Petugas',this.value)"></td>
-                  <td class="th-search"><input placeholder="Kondisi..." oninput="colFilter('kunjungan','Kondisi',this.value)"></td>
-                  <td class="th-search"></td><td class="th-search"></td>
-                </tr>
-              </thead>
-              <tbody id="kunjunganTable"></tbody>
-            </table>
-          </div>
+          <div class="card-body"><table>
+            <thead><tr><th>#</th><th>Petani</th><th>Desa</th><th>Tanggal</th><th>Petugas</th><th>Kondisi</th><th>Masalah</th><th>Rekomendasi</th></tr></thead>
+            <tbody id="kunjunganTable"></tbody>
+          </table></div>
           <div class="pagination" id="kunjunganPagination"></div>
         </div>
       </div>
@@ -403,30 +253,18 @@ tr:hover td{background:#f8fafc;}
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-box" style="color:var(--amber);margin-right:6px"></i>Data Produksi</h3>
-            <span id="produksiCount" style="font-size:12px;color:var(--s4)"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="search-col" placeholder="🔍 Petani" oninput="colFilter('produksi','Nama Petani',this.value)">
+              <input class="search-col" placeholder="🔍 Komoditas" oninput="colFilter('produksi','Komoditas',this.value)">
+              <input class="search-col" placeholder="🔍 Tahun" oninput="colFilter('produksi','Tahun',this.value)">
+              <input class="search-col" placeholder="🔍 Pembeli" oninput="colFilter('produksi','Pembeli',this.value)">
+              <span id="produksiCount" style="font-size:12px;color:var(--s4)"></span>
+            </div>
           </div>
-          <div class="card-body">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Petani</th><th>Desa</th><th>Komoditas</th><th>Tahun</th>
-                  <th>Musim</th><th>Jumlah</th><th>Satuan</th><th>Luas (Ha)</th><th>Total (Rp)</th><th>Pembeli</th>
-                </tr>
-                <tr>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Cari petani..." oninput="colFilter('produksi','Nama Petani',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('produksi','Desa',this.value)"></td>
-                  <td class="th-search"><input placeholder="Komoditas..." oninput="colFilter('produksi','Komoditas',this.value)"></td>
-                  <td class="th-search"><input placeholder="Tahun..." oninput="colFilter('produksi','Tahun',this.value)"></td>
-                  <td class="th-search"><input placeholder="Musim..." oninput="colFilter('produksi','Musim',this.value)"></td>
-                  <td class="th-search"></td><td class="th-search"></td><td class="th-search"></td>
-                  <td class="th-search"></td><td class="th-search"><input placeholder="Pembeli..." oninput="colFilter('produksi','Pembeli',this.value)"></td>
-                </tr>
-              </thead>
-              <tbody id="produksiTable"></tbody>
-            </table>
-          </div>
+          <div class="card-body"><table>
+            <thead><tr><th>#</th><th>Petani</th><th>Desa</th><th>Komoditas</th><th>Tahun</th><th>Musim</th><th>Jumlah</th><th>Satuan</th><th>Luas (Ha)</th><th>Total (Rp)</th><th>Pembeli</th></tr></thead>
+            <tbody id="produksiTable"></tbody>
+          </table></div>
           <div class="pagination" id="produksiPagination"></div>
         </div>
       </div>
@@ -436,29 +274,17 @@ tr:hover td{background:#f8fafc;}
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-seedling" style="color:var(--purple);margin-right:6px"></i>Data Tanaman</h3>
-            <span id="tanamanCount" style="font-size:12px;color:var(--s4)"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="search-col" placeholder="🔍 Petani" oninput="colFilter('tanaman','Nama Petani',this.value)">
+              <input class="search-col" placeholder="🔍 Jenis" oninput="colFilter('tanaman','Jenis Tanaman',this.value)">
+              <input class="search-col" placeholder="🔍 Status" oninput="colFilter('tanaman','Status',this.value)">
+              <span id="tanamanCount" style="font-size:12px;color:var(--s4)"></span>
+            </div>
           </div>
-          <div class="card-body">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Petani</th><th>Desa</th><th>Jenis Tanaman</th>
-                  <th>Luas (Ha)</th><th>Umur (Bln)</th><th>Status</th><th>Panen</th>
-                </tr>
-                <tr>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Cari petani..." oninput="colFilter('tanaman','Nama Petani',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('tanaman','Desa',this.value)"></td>
-                  <td class="th-search"><input placeholder="Jenis tanaman..." oninput="colFilter('tanaman','Jenis Tanaman',this.value)"></td>
-                  <td class="th-search"></td><td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Status..." oninput="colFilter('tanaman','Status',this.value)"></td>
-                  <td class="th-search"></td>
-                </tr>
-              </thead>
-              <tbody id="tanamanTable"></tbody>
-            </table>
-          </div>
+          <div class="card-body"><table>
+            <thead><tr><th>#</th><th>Petani</th><th>Desa</th><th>Jenis Tanaman</th><th>Luas (Ha)</th><th>Umur (Bln)</th><th>Status</th><th>Panen</th></tr></thead>
+            <tbody id="tanamanTable"></tbody>
+          </table></div>
           <div class="pagination" id="tanamanPagination"></div>
         </div>
       </div>
@@ -468,33 +294,17 @@ tr:hover td{background:#f8fafc;}
         <div class="card">
           <div class="card-header">
             <h3><i class="fas fa-bug" style="color:var(--red);margin-right:6px"></i>Hama & Penyakit</h3>
-            <span id="hamaCount" style="font-size:12px;color:var(--s4)"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="search-col" placeholder="🔍 Petani" oninput="colFilter('hama','Nama Petani',this.value)">
+              <input class="search-col" placeholder="🔍 Nama Hama" oninput="colFilter('hama','Nama Hama/Penyakit',this.value)">
+              <input class="search-col" placeholder="🔍 Tingkat" oninput="colFilter('hama','Tingkat Serangan',this.value)">
+              <span id="hamaCount" style="font-size:12px;color:var(--s4)"></span>
+            </div>
           </div>
-          <div class="card-body">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Petani</th><th>Desa</th><th>Tgl Kunjungan</th>
-                  <th>Petugas</th><th>Tanaman</th><th>Nama Hama/Penyakit</th>
-                  <th>Tingkat</th><th>Status</th><th>Solusi</th>
-                </tr>
-                <tr>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Cari petani..." oninput="colFilter('hama','Nama Petani',this.value)"></td>
-                  <td class="th-search"><input placeholder="Cari desa..." oninput="colFilter('hama','Desa',this.value)"></td>
-                  <td class="th-search"></td>
-                  <td class="th-search"><input placeholder="Petugas..." oninput="colFilter('hama','Petugas',this.value)"></td>
-                  <td class="th-search"><input placeholder="Tanaman..." oninput="colFilter('hama','Nama Tanaman',this.value)"></td>
-                  <td class="th-search"><input placeholder="Nama hama..." oninput="colFilter('hama','Nama Hama/Penyakit',this.value)"></td>
-                  <td class="th-search"><input placeholder="Tingkat..." oninput="colFilter('hama','Tingkat Serangan',this.value)"></td>
-                  <td class="th-search"><input placeholder="Status..." oninput="colFilter('hama','Status',this.value)"></td>
-                  <td class="th-search"></td>
-                </tr>
-              </thead>
-              <tbody id="hamaTable"></tbody>
-            </table>
-          </div>
+          <div class="card-body"><table>
+            <thead><tr><th>#</th><th>Petani</th><th>Desa</th><th>Tgl Kunjungan</th><th>Petugas</th><th>Tanaman</th><th>Nama Hama</th><th>Tingkat</th><th>Status</th><th>Solusi</th></tr></thead>
+            <tbody id="hamaTable"></tbody>
+          </table></div>
           <div class="pagination" id="hamaPagination"></div>
         </div>
       </div>
